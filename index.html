@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#8b2e1f">
+<title>学员手册 · 恒韵国乐</title>
+<style>
+:root{
+  --paper:#f6f1e7;
+  --card:#fffdf8;
+  --ink:#3b2f28;
+  --ink-soft:#85746a;
+  --line:#e6dac6;
+  --zhu:#a0341f;        /* 朱砂红 */
+  --zhu-soft:#f8e9e2;
+  --green:#3f7a50;
+  --green-soft:#e9f1ea;
+  --amber:#9a6b1f;
+  --amber-soft:#f8f0dd;
+  --blue:#3d5f80;
+  --blue-soft:#e8eef4;
+  --gold:#b8860b;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--paper);color:var(--ink);font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;line-height:1.65;padding-bottom:env(safe-area-inset-bottom)}
+.serif{font-family:"Kaiti SC","KaiTi","STKaiti","楷体",serif}
+
+/* ===== 顶部 ===== */
+header.top{background:linear-gradient(180deg,#8b2e1f,#a0341f);color:#fdf6ec;padding:22px 20px 18px;position:relative}
+header.top .school{font-size:12px;letter-spacing:4px;opacity:.85}
+header.top h1{font-size:26px;margin-top:2px;font-weight:600}
+header.top .updated{position:absolute;right:20px;top:30px;font-size:12px;opacity:.85}
+header.top .count{margin-top:8px;font-size:13px;opacity:.9}
+
+/* ===== 搜索与筛选 ===== */
+.toolbar{position:sticky;top:0;z-index:10;background:var(--paper);padding:12px 16px 10px;border-bottom:1px solid var(--line)}
+.search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:9px 14px}
+.search input{flex:1;border:none;outline:none;background:none;font-size:15px;color:var(--ink)}
+.filters{display:flex;gap:8px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:5px 14px;border-radius:16px;font-size:13px;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);cursor:pointer;user-select:none}
+.chip.on{background:var(--zhu);border-color:var(--zhu);color:#fff}
+
+/* ===== 学员列表 ===== */
+.list{padding:14px 16px 30px;max-width:720px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;cursor:pointer;box-shadow:0 1px 3px rgba(59,47,40,.05);transition:transform .1s}
+.card:active{transform:scale(.985)}
+.card .row1{display:flex;align-items:center;gap:12px}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--zhu);color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-family:"Kaiti SC","KaiTi","STKaiti",serif;flex-shrink:0}
+.card .name{font-size:18px;font-weight:600}
+.card .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.tag{font-size:12px;padding:2px 9px;border-radius:10px;background:var(--paper);border:1px solid var(--line);color:var(--ink-soft)}
+.card .row2{display:flex;justify-content:space-between;align-items:center;margin-top:9px;font-size:13px;color:var(--ink-soft)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.dot.zai{background:var(--green)}
+.dot.xin{background:var(--gold)}
+.dot.qing{background:var(--amber)}
+.dot.ting{background:#9a8f86}
+
+/* ===== 学员详情 ===== */
+.detail{padding:14px 16px 40px;max-width:720px;margin:0 auto}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--zhu);cursor:pointer;padding:4px 0;margin-bottom:10px;user-select:none}
+.person{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:6px}
+.person .pr1{display:flex;align-items:center;gap:12px}
+.person .name{font-size:22px;font-weight:600}
+.person .st{font-size:13px;color:var(--ink-soft);margin-top:2px}
+.person .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.pchip{font-size:12px;padding:3px 10px;border-radius:12px;background:var(--paper);border:1px solid var(--line)}
+.person .note{margin-top:12px;font-size:14px;background:var(--zhu-soft);border-left:3px solid var(--zhu);padding:9px 12px;border-radius:0 8px 8px 0}
+.fields{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;font-size:14px}
+.fields .f{display:flex;gap:6px}
+.fields .k{color:var(--ink-soft);flex-shrink:0}
+
+/* ===== 日志 ===== */
+.section-title{font-size:15px;font-weight:600;margin:18px 2px 10px;display:flex;align-items:center;gap:8px}
+.section-title::before{content:"";width:4px;height:16px;background:var(--zhu);border-radius:2px}
+.log{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.log .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.log .date{font-weight:600;font-size:15px}
+.badge{font-size:12px;padding:2px 10px;border-radius:10px;background:var(--paper);color:var(--ink-soft)}
+.badge.正课{background:var(--zhu-soft);color:var(--zhu)}
+.badge.陪练{background:var(--green-soft);color:var(--green)}
+.badge.回访{background:var(--amber-soft);color:var(--amber)}
+.log .item{display:flex;gap:8px;font-size:14px;margin-top:7px}
+.log .ic{flex-shrink:0}
+.log .txt{white-space:pre-line}
+.log .ic.prog{color:var(--green)}
+.log .ic.prob{color:var(--amber)}
+.log .ic.home{color:var(--blue)}
+
+.empty{text-align:center;color:var(--ink-soft);padding:40px 0;font-size:14px}
+footer{text-align:center;font-size:12px;color:#a89a8c;padding:20px 16px 30px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* =====================================================
+   学员数据（每次更新只改这里，改完把整个文件转发到手机即可）
+   日志按时间顺序排列，最新的加在最后面
+   ===================================================== */
+const DATA = {
+  updated: "2026-10-17",
+  students: [
+    {
+      id: "langlang",
+      name: "朗朗",
+      gender: "男",
+      age: "约11岁",
+      piece: "井冈山",
+      note: "善良、聪明、有点小内敛",
+      parent: "",
+      status: "在读",
+      logs: [
+        {
+          date: "2026-10-17",
+          type: "正课",
+          content: "① 右手快板：16分音符连贯、提速、掌根关节、背谱\n② 第一乐句双手配合：左手突节奏、右手稳旋律\n③ 右手主旋律连弹5次",
+          progress: "主旋律体态到位、空间拉长",
+          problems: "左手：手腕被挤压→律动不起来\n右手：静态不够、无名指放得不够→衔接处提速困难",
+          homework: "左手：手腕后端支撑、移动靠小臂\n右手：单练无名指衔接"
+        }
+      ]
+    },
+    {
+      id: "zhitong",
+      name: "芷彤",
+      gender: "女",
+      age: "约5岁",
+      piece: "战台风",
+      note: "很聪明、比较腼腆",
+      parent: "",
+      status: "在读",
+      logs: [
+        {
+          date: "2026-10-17",
+          type: "正课",
+          content: "① 第一段\n② 扫摇段落\n③ 扫摇连续3分钟不停（力量、耐力、连贯性）",
+          progress: "节奏非常稳定；滑音会用脚支撑、会借力",
+          problems: "手腕反应可更快",
+          homework: "手腕：负重器练习\n扫摇：连续3分钟耐力训练"
+        }
+      ]
+    },
+    {
+      id: "ziyu",
+      name: "子渝",
+      gender: "女",
+      age: "约7岁",
+      piece: "浏阳河",
+      note: "非常机灵、有自己的想法、比较调皮——需要用方法hold住",
+      parent: "",
+      status: "在读",
+      logs: [
+        {
+          date: "2026-10-17",
+          type: "正课",
+          content: "① 快板第一句\n② 第一句右手连续弹奏10次（强化记忆）",
+          progress: "",
+          problems: "熟练度与速度需加强；远距离弹奏时，手臂要有提前往前送的意识",
+          homework: "快板第一句：提速 + 远距离弹奏的手臂前送意识"
+        }
+      ]
+    },
+    {
+      id: "yantong",
+      name: "彦彤",
+      gender: "女",
+      age: "约6岁",
+      piece: "战台风",
+      note: "耐力很强、对自己要求很高；引导得法时很听话",
+      parent: "",
+      status: "在读",
+      logs: [
+        {
+          date: "2026-10-17",
+          type: "正课",
+          content: "① 扫摇段落\n② 摇指独立训练",
+          progress: "",
+          problems: "摇指发力点和运动位置不对（初学不久，需巩固）：\n捏指：越靠近前端越好\n小臂：必须给足空间（小臂易掉）\n手型：三五指框架要打开（易紧张收拢），要有静态空间支撑",
+          homework: "独立练习「劈」指，找摆动感与方向感"
+        }
+      ]
+    }
+  ]
+};
+
+/* ================= 页面逻辑（一般不用动） ================= */
+const app = document.getElementById("app");
+const ST_DOT = { "在读":"zai", "新报名":"xin", "请假中":"qing", "已停课":"ting" };
+const FILTERS = ["全部","在读","新报名","请假中","已停课"];
+const state = { view:"list", q:"", status:"全部", sid:null };
+
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function daysAgo(ds){
+  const d = new Date(ds + "T00:00:00");
+  const now = new Date(); now.setHours(0,0,0,0);
+  const diff = Math.round((now - d) / 86400000);
+  if (diff <= 0) return "今天";
+  if (diff === 1) return "昨天";
+  if (diff <= 7) return diff + "天前";
+  return ds.slice(5).replace("-", ".");
+}
+
+function lastLog(s){ return s.logs.length ? s.logs[s.logs.length - 1] : null; }
+
+function cardHTML(s){
+  const ll = lastLog(s);
+  return '<div class="card" data-id="' + s.id + '">' +
+    '<div class="row1">' +
+      '<div class="avatar">' + esc(s.name[0]) + '</div>' +
+      '<div>' +
+        '<div class="name">' + esc(s.name) + '</div>' +
+        '<div class="tags">' +
+          (s.piece ? '<span class="tag">🎼 ' + esc(s.piece) + '</span>' : '') +
+          (s.age ? '<span class="tag">' + esc(s.age) + '</span>' : '') +
+          (s.gender ? '<span class="tag">' + esc(s.gender) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="row2">' +
+      '<span><span class="dot ' + (ST_DOT[s.status]||"") + '"></span>' + esc(s.status) + '</span>' +
+      '<span>' + (ll ? '最近记录：' + daysAgo(ll.date) : '暂无记录') + '</span>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderList(){
+  const { q, status } = state;
+  let list = DATA.students.filter(function(s){
+    if (status !== "全部" && s.status !== status) return false;
+    if (q && s.name.indexOf(q) === -1) return false;
+    return true;
+  });
+  list = list.slice().sort(function(a,b){
+    const da = lastLog(a), db = lastLog(b);
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return db.date.localeCompare(da.date);
+  });
+  app.innerHTML =
+    '<header class="top">' +
+      '<div class="school">恒 韵 国 乐</div>' +
+      '<h1 class="serif">学员手册</h1>' +
+      '<div class="updated">更新于 ' + DATA.updated + '</div>' +
+      '<div class="count">共 ' + DATA.students.length + ' 名学员</div>' +
+    '</header>' +
+    '<div class="toolbar">' +
+      '<div class="search"><span>🔍</span><input id="q" placeholder="搜索学员姓名…" value="' + esc(state.q) + '"></div>' +
+      '<div class="filters" id="filters">' +
+        FILTERS.map(function(st){ return '<div class="chip' + (state.status===st?" on":"") + '" data-st="' + st + '">' + st + '</div>'; }).join("") +
+      '</div>' +
+    '</div>' +
+    '<div class="list">' +
+      (list.length
+        ? list.map(cardHTML).join("")
+        : '<div class="empty">' + (state.q ? '没有找到「' + esc(state.q) + '」的学员' : '没有符合筛选的学员') + '</div>') +
+    '</div>' +
+    '<footer>仅供教学使用 · 请勿外传</footer>';
+
+  const inp = document.getElementById("q");
+  inp.addEventListener("input", function(e){
+    state.q = e.target.value.trim();
+    renderList();
+    const ni = document.getElementById("q");
+    ni.focus();
+    ni.setSelectionRange(ni.value.length, ni.value.length);
+  });
+  document.getElementById("filters").querySelectorAll(".chip").forEach(function(c){
+    c.onclick = function(){ state.status = c.dataset.st; renderList(); };
+  });
+  document.querySelectorAll(".card").forEach(function(c){
+    c.onclick = function(){ state.view = "detail"; state.sid = c.dataset.id; render(); };
+  });
+}
+
+function logHTML(l){
+  return '<div class="log">' +
+    '<div class="head">' +
+      '<span class="date">' + esc(l.date) + '</span>' +
+      '<span class="badge ' + esc(l.type) + '">' + esc(l.type) + '</span>' +
+    '</div>' +
+    '<div class="item"><span class="ic">📖</span><span class="txt">' + esc(l.content) + '</span></div>' +
+    (l.progress ? '<div class="item"><span class="ic prog">✅</span><span class="txt">' + esc(l.progress) + '</span></div>' : '') +
+    (l.problems ? '<div class="item"><span class="ic prob">⚠️</span><span class="txt">' + esc(l.problems) + '</span></div>' : '') +
+    (l.homework ? '<div class="item"><span class="ic home">✏️</span><span class="txt">' + esc(l.homework) + '</span></div>' : '') +
+  '</div>';
+}
+
+function renderDetail(id){
+  const s = DATA.students.find(function(x){ return x.id === id; });
+  if (!s) { state.view = "list"; return render(); }
+  const fields = [
+    ["性别", s.gender], ["年龄", s.age], ["家长沟通", s.parent]
+  ].filter(function(f){ return f[1]; });
+  app.innerHTML =
+    '<header class="top">' +
+      '<div class="school">恒 韵 国 乐</div>' +
+      '<h1 class="serif">学员手册</h1>' +
+    '</header>' +
+    '<div class="detail">' +
+      '<div class="back" id="back">← 返回学员列表</div>' +
+      '<div class="person">' +
+        '<div class="pr1">' +
+          '<div class="avatar" style="width:52px;height:52px;font-size:24px">' + esc(s.name[0]) + '</div>' +
+          '<div>' +
+            '<div class="name">' + esc(s.name) + '</div>' +
+            '<div class="st"><span class="dot ' + (ST_DOT[s.status]||"") + '"></span>' + esc(s.status) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="chips">' +
+          (s.piece ? '<span class="pchip">🎼 在学曲目：' + esc(s.piece) + '</span>' : '') +
+        '</div>' +
+        (s.note ? '<div class="note">🧠 ' + esc(s.note) + '</div>' : '') +
+        (fields.length ? '<div class="fields">' + fields.map(function(f){
+          return '<div class="f"><span class="k">' + f[0] + '</span><span>' + esc(f[1]) + '</span></div>';
+        }).join("") + '</div>' : '') +
+      '</div>' +
+      '<div class="section-title">教学日志</div>' +
+      (s.logs.length
+        ? s.logs.slice().reverse().map(logHTML).join("")
+        : '<div class="empty">还没有记录，从第一节课开始吧</div>') +
+    '</div>' +
+    '<footer>仅供教学使用 · 请勿外传</footer>';
+  document.getElementById("back").onclick = function(){ state.view = "list"; render(); };
+}
+
+function render(){
+  if (state.view === "detail") renderDetail(state.sid);
+  else renderList();
+}
+
+render();
+</script>
+</body>
+</html>
