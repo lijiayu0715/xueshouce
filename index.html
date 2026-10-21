@@ -13,7 +13,7 @@
   --ink:#3b2f28;
   --ink-soft:#85746a;
   --line:#e6dac6;
-  --zhu:#a0341f;        /* 朱砂红 */
+  --zhu:#a0341f;
   --zhu-soft:#f8e9e2;
   --green:#3f7a50;
   --green-soft:#e9f1ea;
@@ -44,7 +44,7 @@ header.top .count{margin-top:8px;font-size:13px;opacity:.9}
 .chip.on{background:var(--zhu);border-color:var(--zhu);color:#fff}
 
 /* ===== 学员列表 ===== */
-.list{padding:14px 16px 30px;max-width:720px;margin:0 auto}
+.list{padding:14px 16px 110px;max-width:720px;margin:0 auto}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;cursor:pointer;box-shadow:0 1px 3px rgba(59,47,40,.05);transition:transform .1s}
 .card:active{transform:scale(.985)}
 .card .row1{display:flex;align-items:center;gap:12px}
@@ -60,7 +60,7 @@ header.top .count{margin-top:8px;font-size:13px;opacity:.9}
 .dot.ting{background:#9a8f86}
 
 /* ===== 学员详情 ===== */
-.detail{padding:14px 16px 40px;max-width:720px;margin:0 auto}
+.detail{padding:14px 16px 110px;max-width:720px;margin:0 auto}
 .back{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--zhu);cursor:pointer;padding:4px 0;margin-bottom:10px;user-select:none}
 .person{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:6px}
 .person .pr1{display:flex;align-items:center;gap:12px}
@@ -92,165 +92,81 @@ header.top .count{margin-top:8px;font-size:13px;opacity:.9}
 
 .empty{text-align:center;color:var(--ink-soft);padding:40px 0;font-size:14px}
 footer{text-align:center;font-size:12px;color:#a89a8c;padding:20px 16px 30px}
+
+/* ===== 悬浮按钮 ===== */
+.fabs{position:fixed;right:16px;bottom:26px;display:flex;flex-direction:column;gap:10px;z-index:20}
+.fab{background:var(--zhu);color:#fff;border:none;border-radius:24px;padding:12px 20px;font-size:15px;box-shadow:0 3px 10px rgba(160,52,31,.35);cursor:pointer}
+.fab.ghost{background:var(--card);color:var(--zhu);border:1px solid var(--zhu);box-shadow:0 2px 8px rgba(59,47,40,.15)}
+
+/* ===== 弹窗 ===== */
+.mask{position:fixed;inset:0;background:rgba(40,30,25,.5);z-index:30;display:none;align-items:flex-end;justify-content:center}
+.mask.on{display:flex}
+.sheet{background:var(--paper);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:18px 18px 30px}
+.sheet h3{font-size:17px;margin-bottom:14px}
+.frow{margin-bottom:12px}
+.frow label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:5px}
+.frow input,.frow textarea,.frow select{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:15px;background:var(--card);color:var(--ink);font-family:inherit}
+.frow textarea{min-height:64px;resize:vertical}
+.tchips{display:flex;gap:8px;flex-wrap:wrap}
+.tchip{padding:7px 16px;border-radius:18px;border:1px solid var(--line);background:var(--card);font-size:14px;cursor:pointer;user-select:none}
+.tchip.on{background:var(--zhu);color:#fff;border-color:var(--zhu)}
+.btn-big{width:100%;background:var(--zhu);color:#fff;border:none;border-radius:12px;padding:13px;font-size:16px;cursor:pointer;margin-top:6px}
+.btn-row{display:flex;gap:10px;margin-top:6px}
+.btn-row .btn-big{flex:1}
+.btn-big.plain{background:var(--card);color:var(--ink-soft);border:1px solid var(--line)}
+.passbox input{letter-spacing:10px;text-align:center;font-size:24px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#3b2f28;color:#fff;padding:9px 20px;border-radius:20px;font-size:14px;z-index:50;opacity:0;transition:opacity .3s;pointer-events:none;max-width:82vw;text-align:center}
+.toast.on{opacity:1}
 </style>
 </head>
 <body>
 <div id="app"></div>
+<div class="fabs" id="fabs">
+  <button class="fab" id="fabLog">＋ 记录</button>
+  <button class="fab ghost" id="fabStudent">＋ 学员</button>
+</div>
+<div class="mask" id="mask"></div>
+<div class="toast" id="toast"></div>
 <script>
-/* =====================================================
-   学员数据（每次更新只改这里，改完把整个文件转发到手机即可）
-   日志按时间顺序排列，最新的加在最后面
-   ===================================================== */
-const DATA = {
-  updated: "2026-10-18",
-  students: [
-    {
-      id: "langlang",
-      name: "朗朗",
-      gender: "男",
-      age: "约11岁",
-      piece: "井冈山",
-      note: "善良、聪明、有点小内敛",
-      parent: "",
-      status: "在读",
-      logs: [
-        {
-          date: "2026-10-17",
-          type: "正课",
-          content: "① 右手快板：16分音符连贯、提速、掌根关节、背谱\n② 第一乐句双手配合：左手突节奏、右手稳旋律\n③ 右手主旋律连弹5次",
-          progress: "主旋律体态到位、空间拉长",
-          problems: "左手：手腕被挤压→律动不起来\n右手：静态不够、无名指放得不够→衔接处提速困难",
-          homework: "左手：手腕后端支撑、移动靠小臂\n右手：单练无名指衔接"
-        }
-      ]
-    },
-    {
-      id: "zhitong",
-      name: "芷彤",
-      gender: "女",
-      age: "约5岁",
-      piece: "战台风",
-      note: "很聪明、比较腼腆",
-      parent: "",
-      status: "在读",
-      logs: [
-        {
-          date: "2026-10-17",
-          type: "正课",
-          content: "① 第一段\n② 扫摇段落\n③ 扫摇连续3分钟不停（力量、耐力、连贯性）",
-          progress: "节奏非常稳定；滑音会用脚支撑、会借力",
-          problems: "手腕反应可更快",
-          homework: "手腕：负重器练习\n扫摇：连续3分钟耐力训练"
-        },
-        {
-          date: "2026-10-18",
-          type: "陪练",
-          content: "战台风：点奏、刮奏陪练",
-          progress: "点奏力度加强非常多；刮奏的力度和情感都在线",
-          problems: "",
-          homework: ""
-        }
-      ]
-    },
-    {
-      id: "ziyu",
-      name: "子渝",
-      gender: "女",
-      age: "约7岁",
-      piece: "浏阳河",
-      note: "非常机灵、有自己的想法、比较调皮——需要用方法hold住",
-      parent: "",
-      status: "在读",
-      logs: [
-        {
-          date: "2026-10-17",
-          type: "正课",
-          content: "① 快板第一句\n② 第一句右手连续弹奏10次（强化记忆）",
-          progress: "",
-          problems: "熟练度与速度需加强；远距离弹奏时，手臂要有提前往前送的意识",
-          homework: "快板第一句：提速 + 远距离弹奏的手臂前送意识"
-        }
-      ]
-    },
-    {
-      id: "yantong",
-      name: "彦彤",
-      gender: "女",
-      age: "约6岁",
-      piece: "战台风",
-      note: "耐力很强、对自己要求很高；引导得法时很听话",
-      parent: "",
-      status: "在读",
-      logs: [
-        {
-          date: "2026-10-17",
-          type: "正课",
-          content: "① 扫摇段落\n② 摇指独立训练",
-          progress: "",
-          problems: "摇指发力点和运动位置不对（初学不久，需巩固）：\n捏指：越靠近前端越好\n小臂：必须给足空间（小臂易掉）\n手型：三五指框架要打开（易紧张收拢），要有静态空间支撑",
-          homework: "独立练习「劈」指，找摆动感与方向感"
-        },
-        {
-          date: "2026-10-18",
-          type: "陪练",
-          content: "点奏训练、摇指训练（暂以摇指代替扫摇）",
-          progress: "点奏的速度和力度都起来了",
-          problems: "扫摇暂时不能练：摇指刚改过来不到一周，要继续保持\n重心容易倒向反方向",
-          homework: "摇指继续保持巩固；重心往身体这边多倒一点（需不断提醒）"
-        }
-      ]
-    },
-    {
-      id: "liaoyuan",
-      name: "廖榆安",
-      gender: "女",
-      age: "约7岁",
-      piece: "浏阳河",
-      note: "很安静、很听话的小女孩",
-      parent: "",
-      status: "在读",
-      logs: [
-        {
-          date: "2026-10-18",
-          type: "陪练",
-          content: "新学：快板第一句、慢板第一句",
-          progress: "右手手指机能很好",
-          problems: "左手中指、无名指还需加强训练",
-          homework: "左手中指、无名指加强训练"
-        }
-      ]
-    },
-    {
-      id: "xiaoxiao",
-      name: "笑笑",
-      gender: "女",
-      age: "约7岁",
-      piece: "战台风",
-      note: "很文静",
-      parent: "",
-      status: "在读",
-      logs: [
-        {
-          date: "2026-10-18",
-          type: "陪练",
-          content: "点奏片段、扫摇训练",
-          progress: "扫摇能起很快的速度",
-          problems: "点奏：左手独立性不够→容易含糊到一起\n扫摇：速度快了容易乱",
-          homework: "从摇指开始练起，打好基础再提速"
-        }
-      ]
-    }
-  ]
-};
+/* ============ 云端配置（营养网站同一个 Supabase） ============ */
+const SUPABASE_URL = "https://jxgjrkpzzqxjafrjrejv.supabase.co";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp4Z2pya3B6enF4amFmcmpyZWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5Mzk1NzUsImV4cCI6MjA5NTUxNTU3NX0.Ll_7gsSo0ROeNjij6PmXM7jLNIIDcZu4PBzcmXUAjUg";
+const PASS_KEY = "xsc_pass";
 
-/* ================= 页面逻辑（一般不用动） ================= */
+/* ============ 本地备份数据（云端连不上时兜底，只读） ============ */
+const FALLBACK = { students: [
+  { id:"langlang", name:"朗朗", gender:"男", age:"约11岁", piece:"井冈山", note:"善良、聪明、有点小内敛", parent:"", status:"在读", logs:[
+    { id:1, date:"2026-10-17", type:"正课", content:"① 右手快板：16分音符连贯、提速、掌根关节、背谱\n② 第一乐句双手配合：左手突节奏、右手稳旋律\n③ 右手主旋律连弹5次", progress:"主旋律体态到位、空间拉长", problems:"左手：手腕被挤压→律动不起来\n右手：静态不够、无名指放得不够→衔接处提速困难", homework:"左手：手腕后端支撑、移动靠小臂\n右手：单练无名指衔接" }
+  ]},
+  { id:"zhitong", name:"芷彤", gender:"女", age:"约5岁", piece:"战台风", note:"很聪明、比较腼腆", parent:"", status:"在读", logs:[
+    { id:2, date:"2026-10-17", type:"正课", content:"① 第一段\n② 扫摇段落\n③ 扫摇连续3分钟不停（力量、耐力、连贯性）", progress:"节奏非常稳定；滑音会用脚支撑、会借力", problems:"手腕反应可更快", homework:"手腕：负重器练习\n扫摇：连续3分钟耐力训练" },
+    { id:3, date:"2026-10-18", type:"陪练", content:"战台风：点奏、刮奏陪练", progress:"点奏力度加强非常多；刮奏的力度和情感都在线", problems:"", homework:"" }
+  ]},
+  { id:"ziyu", name:"子渝", gender:"女", age:"约7岁", piece:"浏阳河", note:"非常机灵、有自己的想法、比较调皮——需要用方法hold住", parent:"", status:"在读", logs:[
+    { id:4, date:"2026-10-17", type:"正课", content:"① 快板第一句\n② 第一句右手连续弹奏10次（强化记忆）", progress:"", problems:"熟练度与速度需加强；远距离弹奏时，手臂要有提前往前送的意识", homework:"快板第一句：提速 + 远距离弹奏的手臂前送意识" }
+  ]},
+  { id:"yantong", name:"彦彤", gender:"女", age:"约6岁", piece:"战台风", note:"耐力很强、对自己要求很高；引导得法时很听话", parent:"", status:"在读", logs:[
+    { id:5, date:"2026-10-17", type:"正课", content:"① 扫摇段落\n② 摇指独立训练", progress:"", problems:"摇指发力点和运动位置不对（初学不久，需巩固）：\n捏指：越靠近前端越好\n小臂：必须给足空间（小臂易掉）\n手型：三五指框架要打开（易紧张收拢），要有静态空间支撑", homework:"独立练习「劈」指，找摆动感与方向感" },
+    { id:6, date:"2026-10-18", type:"陪练", content:"点奏训练、摇指训练（暂以摇指代替扫摇）", progress:"点奏的速度和力度都起来了", problems:"扫摇暂时不能练：摇指刚改过来不到一周，要继续保持\n重心容易倒向反方向", homework:"摇指继续保持巩固；重心往身体这边多倒一点（需不断提醒）" }
+  ]},
+  { id:"liaoyuan", name:"廖榆安", gender:"女", age:"约7岁", piece:"浏阳河", note:"很安静、很听话的小女孩", parent:"", status:"在读", logs:[
+    { id:7, date:"2026-10-18", type:"陪练", content:"新学：快板第一句、慢板第一句", progress:"右手手指机能很好", problems:"左手中指、无名指还需加强训练", homework:"左手中指、无名指加强训练" }
+  ]},
+  { id:"xiaoxiao", name:"笑笑", gender:"女", age:"约7岁", piece:"战台风", note:"很文静", parent:"", status:"在读", logs:[
+    { id:8, date:"2026-10-18", type:"陪练", content:"点奏片段、扫摇训练", progress:"扫摇能起很快的速度", problems:"点奏：左手独立性不够→容易含糊到一起\n扫摇：速度快了容易乱", homework:"从摇指开始练起，打好基础再提速" }
+  ]}
+]};
+
+/* ============ 状态与工具 ============ */
 const app = document.getElementById("app");
+const mask = document.getElementById("mask");
+const toastEl = document.getElementById("toast");
 const ST_DOT = { "在读":"zai", "新报名":"xin", "请假中":"qing", "已停课":"ting" };
 const FILTERS = ["全部","在读","新报名","请假中","已停课"];
-const state = { view:"list", q:"", status:"全部", sid:null };
+const state = { view:"list", q:"", status:"全部", sid:null, mode:"local", students:[] };
 
 function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function daysAgo(ds){
   const d = new Date(ds + "T00:00:00");
   const now = new Date(); now.setHours(0,0,0,0);
@@ -260,9 +176,37 @@ function daysAgo(ds){
   if (diff <= 7) return diff + "天前";
   return ds.slice(5).replace("-", ".");
 }
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("on");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ toastEl.classList.remove("on"); }, 2200);
+}
 
-function lastLog(s){ return s.logs.length ? s.logs[s.logs.length - 1] : null; }
+/* ============ 数据加载 ============ */
+async function loadData(){
+  try {
+    const r = await fetch(SUPABASE_URL + "/rest/v1/students?select=id,name,gender,age,piece,note,parent,status,logs(id,date,type,content,progress,problems,homework)", {
+      headers: { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY }
+    });
+    if (!r.ok) throw new Error("http " + r.status);
+    const list = await r.json();
+    if (list && list.length) {
+      list.forEach(function(s){
+        if (s.logs) s.logs.sort(function(a,b){ return a.date.localeCompare(b.date) || (a.id - b.id); });
+      });
+      state.students = list;
+      state.mode = "cloud";
+      return;
+    }
+  } catch(e) { /* 云端不可用,走本地备份 */ }
+  state.students = JSON.parse(JSON.stringify(FALLBACK.students));
+  state.mode = "local";
+}
 
+function lastLog(s){ return s.logs && s.logs.length ? s.logs[s.logs.length - 1] : null; }
+
+/* ============ 列表 ============ */
 function cardHTML(s){
   const ll = lastLog(s);
   return '<div class="card" data-id="' + s.id + '">' +
@@ -286,7 +230,7 @@ function cardHTML(s){
 
 function renderList(){
   const { q, status } = state;
-  let list = DATA.students.filter(function(s){
+  let list = state.students.filter(function(s){
     if (status !== "全部" && s.status !== status) return false;
     if (q && s.name.indexOf(q) === -1) return false;
     return true;
@@ -302,8 +246,8 @@ function renderList(){
     '<header class="top">' +
       '<div class="school">恒 韵 国 乐</div>' +
       '<h1 class="serif">学员手册</h1>' +
-      '<div class="updated">更新于 ' + DATA.updated + '</div>' +
-      '<div class="count">共 ' + DATA.students.length + ' 名学员</div>' +
+      '<div class="updated">' + (state.mode === "cloud" ? '☁️ 云端实时' : '📄 本地预览') + '</div>' +
+      '<div class="count">共 ' + state.students.length + ' 名学员</div>' +
     '</header>' +
     '<div class="toolbar">' +
       '<div class="search"><span>🔍</span><input id="q" placeholder="搜索学员姓名…" value="' + esc(state.q) + '"></div>' +
@@ -334,6 +278,7 @@ function renderList(){
   });
 }
 
+/* ============ 详情 ============ */
 function logHTML(l){
   return '<div class="log">' +
     '<div class="head">' +
@@ -348,7 +293,7 @@ function logHTML(l){
 }
 
 function renderDetail(id){
-  const s = DATA.students.find(function(x){ return x.id === id; });
+  const s = state.students.find(function(x){ return x.id === id; });
   if (!s) { state.view = "list"; return render(); }
   const fields = [
     ["性别", s.gender], ["年龄", s.age], ["家长沟通", s.parent]
@@ -357,6 +302,7 @@ function renderDetail(id){
     '<header class="top">' +
       '<div class="school">恒 韵 国 乐</div>' +
       '<h1 class="serif">学员手册</h1>' +
+      '<div class="updated">' + (state.mode === "cloud" ? '☁️ 云端实时' : '📄 本地预览') + '</div>' +
     '</header>' +
     '<div class="detail">' +
       '<div class="back" id="back">← 返回学员列表</div>' +
@@ -377,9 +323,9 @@ function renderDetail(id){
         }).join("") + '</div>' : '') +
       '</div>' +
       '<div class="section-title">教学日志</div>' +
-      (s.logs.length
+      (s.logs && s.logs.length
         ? s.logs.slice().reverse().map(logHTML).join("")
-        : '<div class="empty">还没有记录，从第一节课开始吧</div>') +
+        : '<div class="empty">还没有记录，点右下角「＋ 记录」添加第一条吧</div>') +
     '</div>' +
     '<footer>仅供教学使用 · 请勿外传</footer>';
   document.getElementById("back").onclick = function(){ state.view = "list"; render(); };
@@ -390,7 +336,167 @@ function render(){
   else renderList();
 }
 
-render();
+/* ============ 弹窗 ============ */
+function openSheet(html){
+  mask.innerHTML = '<div class="sheet">' + html + '</div>';
+  mask.classList.add("on");
+}
+function closeSheet(){ mask.classList.remove("on"); mask.innerHTML = ""; }
+mask.addEventListener("click", function(e){ if (e.target === mask) closeSheet(); });
+
+function askPass(){
+  return new Promise(function(resolve){
+    openSheet(
+      '<h3>🔒 输入密码解锁编辑</h3>' +
+      '<div class="frow passbox"><input id="p" type="password" inputmode="numeric" maxlength="4" placeholder="4位数字"></div>' +
+      '<div class="btn-row">' +
+        '<button class="btn-big plain" id="pc">取消</button>' +
+        '<button class="btn-big" id="pok">确定</button>' +
+      '</div>');
+    const inp = document.getElementById("p");
+    inp.focus();
+    document.getElementById("pc").onclick = function(){ closeSheet(); resolve(null); };
+    document.getElementById("pok").onclick = function(){
+      const v = inp.value.trim();
+      if (!v) { toast("请输入4位密码"); return; }
+      closeSheet(); resolve(v);
+    };
+  });
+}
+
+/* ============ 云端写入 ============ */
+async function rpc(name, body){
+  const r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+    method: "POST",
+    headers: { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok){
+    const t = await r.text();
+    if (t.indexOf("bad pass") !== -1) throw new Error("pass");
+    throw new Error("保存失败，请稍后再试");
+  }
+}
+
+async function saveLog(p){
+  let pass = localStorage.getItem(PASS_KEY);
+  if (!pass){ pass = await askPass(); if (!pass) return; }
+  try {
+    await rpc("save_log", {
+      p_pass: pass, p_student_id: p.sid, p_date: p.date, p_type: p.type,
+      p_content: p.content, p_progress: p.progress, p_problems: p.problems, p_homework: p.homework
+    });
+    localStorage.setItem(PASS_KEY, pass);
+    closeSheet();
+    toast("已保存 ✓");
+    await loadData();
+    render();
+  } catch(e) {
+    if (e.message === "pass"){ localStorage.removeItem(PASS_KEY); toast("密码不对，再点一次保存重新输入"); }
+    else toast(e.message);
+  }
+}
+
+async function saveStudent(p){
+  let pass = localStorage.getItem(PASS_KEY);
+  if (!pass){ pass = await askPass(); if (!pass) return; }
+  try {
+    await rpc("save_student", {
+      p_pass: pass, p_id: p.id, p_name: p.name, p_gender: p.gender,
+      p_age: p.age, p_piece: p.piece, p_note: p.note, p_status: "在读"
+    });
+    localStorage.setItem(PASS_KEY, pass);
+    closeSheet();
+    toast("学员已添加 ✓");
+    await loadData();
+    render();
+  } catch(e) {
+    if (e.message === "pass"){ localStorage.removeItem(PASS_KEY); toast("密码不对，再点一次保存重新输入"); }
+    else toast(e.message);
+  }
+}
+
+/* ============ 表单 ============ */
+function openLogForm(){
+  if (state.mode !== "cloud"){ toast("云端未开通，先让 Claude 帮你完成最后一步"); return; }
+  const opts = state.students.map(function(s){
+    return '<option value="' + esc(s.id) + '"' + (s.id === state.sid ? " selected" : "") + '>' + esc(s.name) + '</option>';
+  }).join("");
+  openSheet(
+    '<h3>➕ 新增一条记录</h3>' +
+    '<div class="frow"><label>学员</label><select id="f_sid">' + opts + '</select></div>' +
+    '<div class="frow"><label>日期</label><input id="f_date" type="date" value="' + todayStr() + '"></div>' +
+    '<div class="frow"><label>课型</label><div class="tchips" id="f_type">' +
+      ["陪练","正课","回访"].map(function(t){ return '<div class="tchip' + (t==="陪练"?" on":"") + '" data-t="' + t + '">' + t + '</div>'; }).join("") +
+    '</div></div>' +
+    '<div class="frow"><label>📖 教了什么</label><textarea id="f_content" placeholder="今天练了/学了什么"></textarea></div>' +
+    '<div class="frow"><label>✅ 进步</label><textarea id="f_progress" placeholder="哪里进步了（可选）"></textarea></div>' +
+    '<div class="frow"><label>⚠️ 问题</label><textarea id="f_problems" placeholder="哪里薄弱（可选）"></textarea></div>' +
+    '<div class="frow"><label>✏️ 作业</label><textarea id="f_homework" placeholder="回家练什么（可选）"></textarea></div>' +
+    '<button class="btn-big" id="f_save">保存</button>');
+  let type = "陪练";
+  document.getElementById("f_type").querySelectorAll(".tchip").forEach(function(c){
+    c.onclick = function(){
+      type = c.dataset.t;
+      document.getElementById("f_type").querySelectorAll(".tchip").forEach(function(x){ x.classList.toggle("on", x === c); });
+    };
+  });
+  document.getElementById("f_save").onclick = function(){
+    const content = document.getElementById("f_content").value.trim();
+    if (!content){ toast("「教了什么」至少写一句"); return; }
+    saveLog({
+      sid: document.getElementById("f_sid").value,
+      date: document.getElementById("f_date").value || todayStr(),
+      type: type,
+      content: content,
+      progress: document.getElementById("f_progress").value.trim(),
+      problems: document.getElementById("f_problems").value.trim(),
+      homework: document.getElementById("f_homework").value.trim()
+    });
+  };
+}
+
+function openStudentForm(){
+  if (state.mode !== "cloud"){ toast("云端未开通，先让 Claude 帮你完成最后一步"); return; }
+  openSheet(
+    '<h3>➕ 新增学员</h3>' +
+    '<div class="frow"><label>姓名</label><input id="s_name" placeholder="必填"></div>' +
+    '<div class="frow"><label>性别</label><div class="tchips" id="s_gender">' +
+      ["女","男"].map(function(g){ return '<div class="tchip' + (g==="女"?" on":"") + '" data-g="' + g + '">' + g + '</div>'; }).join("") +
+    '</div></div>' +
+    '<div class="frow"><label>年龄</label><input id="s_age" placeholder="如：约7岁"></div>' +
+    '<div class="frow"><label>🎼 在学曲目</label><input id="s_piece" placeholder="如：战台风"></div>' +
+    '<div class="frow"><label>🧠 记忆点</label><textarea id="s_note" placeholder="性格、特点、注意事项（可选）"></textarea></div>' +
+    '<button class="btn-big" id="s_save">保存</button>');
+  let gender = "女";
+  document.getElementById("s_gender").querySelectorAll(".tchip").forEach(function(c){
+    c.onclick = function(){
+      gender = c.dataset.g;
+      document.getElementById("s_gender").querySelectorAll(".tchip").forEach(function(x){ x.classList.toggle("on", x === c); });
+    };
+  });
+  document.getElementById("s_save").onclick = function(){
+    const name = document.getElementById("s_name").value.trim();
+    if (!name){ toast("请填写姓名"); return; }
+    saveStudent({
+      id: "s" + Date.now(),
+      name: name,
+      gender: gender,
+      age: document.getElementById("s_age").value.trim(),
+      piece: document.getElementById("s_piece").value.trim(),
+      note: document.getElementById("s_note").value.trim()
+    });
+  };
+}
+
+document.getElementById("fabLog").onclick = openLogForm;
+document.getElementById("fabStudent").onclick = openStudentForm;
+
+/* ============ 启动 ============ */
+(async function(){
+  await loadData();
+  render();
+})();
 </script>
 </body>
 </html>
