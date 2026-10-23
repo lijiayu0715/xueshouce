@@ -90,8 +90,8 @@ header.top .count{margin-top:8px;font-size:13px;opacity:.9}
 .log .ic.prob{color:var(--amber)}
 .log .ic.home{color:var(--blue)}
 .head-right{display:flex;align-items:center;gap:10px}
-.logdel{font-size:12px;color:#b0a395;cursor:pointer;padding:2px 4px;user-select:none}
-.logdel:active{color:var(--zhu)}
+.logdel,.logedit{font-size:12px;color:#b0a395;cursor:pointer;padding:2px 4px;user-select:none}
+.logdel:active,.logedit:active{color:var(--zhu)}
 .delstudent{width:100%;background:none;border:1px solid #c0503f;color:#c0503f;border-radius:12px;padding:11px;font-size:14px;margin-top:16px;cursor:pointer}
 
 .empty{text-align:center;color:var(--ink-soft);padding:40px 0;font-size:14px}
@@ -290,7 +290,9 @@ function logHTML(l){
       '<span class="date">' + esc(l.date) + '</span>' +
       '<span class="head-right">' +
         '<span class="badge ' + esc(l.type) + '">' + esc(l.type) + '</span>' +
-        (state.mode === "cloud" ? '<span class="logdel" data-id="' + l.id + '">🗑 删除</span>' : '') +
+        (state.mode === "cloud"
+          ? '<span class="logedit" data-id="' + l.id + '">✏️ 编辑</span><span class="logdel" data-id="' + l.id + '">🗑 删除</span>'
+          : '') +
       '</span>' +
     '</div>' +
     '<div class="item"><span class="ic">📖</span><span class="txt">' + esc(l.content) + '</span></div>' +
@@ -343,6 +345,14 @@ function renderDetail(id){
       e.stopPropagation();
       if (!confirm("确定删除这条记录吗？")) return;
       deleteLog(el.dataset.id);
+    };
+  });
+  document.querySelectorAll(".logedit").forEach(function(el){
+    el.onclick = function(e){
+      e.stopPropagation();
+      const lid = Number(el.dataset.id);
+      const log = (s.logs || []).find(function(x){ return x.id === lid; });
+      if (log) openLogForm(log);
     };
   });
   const ds = document.getElementById("delStudent");
@@ -414,6 +424,21 @@ async function saveLog(p){
   }
 }
 
+async function saveLogEdit(lid, p){
+  try {
+    await rpc("update_log", {
+      p_pass: TEACHER_PASS, p_id: Number(lid), p_date: p.date, p_type: p.type,
+      p_content: p.content, p_progress: p.progress, p_problems: p.problems, p_homework: p.homework
+    });
+    closeSheet();
+    toast("已保存 ✓");
+    await loadData();
+    render();
+  } catch(e) {
+    toast(e.message === "pass" ? "保存失败，请稍后再试" : e.message);
+  }
+}
+
 async function saveStudent(p){
   try {
     await rpc("save_student", {
@@ -454,24 +479,25 @@ async function deleteStudent(sid){
 }
 
 /* ============ 表单 ============ */
-function openLogForm(){
+function openLogForm(existing){
   if (state.mode !== "cloud"){ toast("云端未开通，先让 Claude 帮你完成最后一步"); return; }
+  const ex = existing || null;
   const opts = state.students.map(function(s){
     return '<option value="' + esc(s.id) + '"' + (s.id === state.sid ? " selected" : "") + '>' + esc(s.name) + '</option>';
   }).join("");
   openSheet(
-    '<h3>➕ 新增一条记录</h3>' +
+    '<h3>' + (ex ? '✏️ 编辑记录' : '➕ 新增一条记录') + '</h3>' +
     '<div class="frow"><label>学员</label><select id="f_sid">' + opts + '</select></div>' +
-    '<div class="frow"><label>日期</label><input id="f_date" type="date" value="' + todayStr() + '"></div>' +
+    '<div class="frow"><label>日期</label><input id="f_date" type="date" value="' + (ex ? ex.date : todayStr()) + '"></div>' +
     '<div class="frow"><label>课型</label><div class="tchips" id="f_type">' +
-      ["陪练","正课","回访"].map(function(t){ return '<div class="tchip' + (t==="陪练"?" on":"") + '" data-t="' + t + '">' + t + '</div>'; }).join("") +
+      ["陪练","正课","回访"].map(function(t){ return '<div class="tchip' + (t === (ex ? ex.type : "陪练") ? " on" : "") + '" data-t="' + t + '">' + t + '</div>'; }).join("") +
     '</div></div>' +
-    '<div class="frow"><label>📖 教了什么</label><textarea id="f_content" placeholder="今天练了/学了什么"></textarea></div>' +
-    '<div class="frow"><label>✅ 进步</label><textarea id="f_progress" placeholder="哪里进步了（可选）"></textarea></div>' +
-    '<div class="frow"><label>⚠️ 问题</label><textarea id="f_problems" placeholder="哪里薄弱（可选）"></textarea></div>' +
-    '<div class="frow"><label>✏️ 作业</label><textarea id="f_homework" placeholder="回家练什么（可选）"></textarea></div>' +
-    '<button class="btn-big" id="f_save">保存</button>');
-  let type = "陪练";
+    '<div class="frow"><label>📖 教了什么</label><textarea id="f_content" placeholder="今天练了/学了什么">' + esc(ex ? ex.content : "") + '</textarea></div>' +
+    '<div class="frow"><label>✅ 进步</label><textarea id="f_progress" placeholder="哪里进步了（可选）">' + esc(ex ? ex.progress : "") + '</textarea></div>' +
+    '<div class="frow"><label>⚠️ 问题</label><textarea id="f_problems" placeholder="哪里薄弱（可选）">' + esc(ex ? ex.problems : "") + '</textarea></div>' +
+    '<div class="frow"><label>✏️ 作业</label><textarea id="f_homework" placeholder="回家练什么（可选）">' + esc(ex ? ex.homework : "") + '</textarea></div>' +
+    '<button class="btn-big" id="f_save">' + (ex ? '保存修改' : '保存') + '</button>');
+  let type = ex ? ex.type : "陪练";
   document.getElementById("f_type").querySelectorAll(".tchip").forEach(function(c){
     c.onclick = function(){
       type = c.dataset.t;
@@ -481,7 +507,7 @@ function openLogForm(){
   document.getElementById("f_save").onclick = function(){
     const content = document.getElementById("f_content").value.trim();
     if (!content){ toast("「教了什么」至少写一句"); return; }
-    saveLog({
+    const payload = {
       sid: document.getElementById("f_sid").value,
       date: document.getElementById("f_date").value || todayStr(),
       type: type,
@@ -489,7 +515,9 @@ function openLogForm(){
       progress: document.getElementById("f_progress").value.trim(),
       problems: document.getElementById("f_problems").value.trim(),
       homework: document.getElementById("f_homework").value.trim()
-    });
+    };
+    if (ex) saveLogEdit(ex.id, payload);
+    else saveLog(payload);
   };
 }
 
