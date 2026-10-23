@@ -132,6 +132,7 @@ footer{text-align:center;font-size:12px;color:#a89a8c;padding:20px 16px 30px}
 const SUPABASE_URL = "https://jxgjrkpzzqxjafrjrejv.supabase.co";
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp4Z2pya3B6enF4amFmcmpyZWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5Mzk1NzUsImV4cCI6MjA5NTUxNTU3NX0.Ll_7gsSo0ROeNjij6PmXM7jLNIIDcZu4PBzcmXUAjUg";
 const PASS_KEY = "xsc_pass";
+const TEACHER_PASS = "7715"; // 她决定不需要密码锁，直接内置自动使用，保存时不弹窗
 
 /* ============ 本地备份数据（云端连不上时兜底，只读） ============ */
 const FALLBACK = { students: [
@@ -379,40 +380,32 @@ async function rpc(name, body){
 }
 
 async function saveLog(p){
-  let pass = localStorage.getItem(PASS_KEY);
-  if (!pass){ pass = await askPass(); if (!pass) return; }
   try {
     await rpc("save_log", {
-      p_pass: pass, p_student_id: p.sid, p_date: p.date, p_type: p.type,
+      p_pass: TEACHER_PASS, p_student_id: p.sid, p_date: p.date, p_type: p.type,
       p_content: p.content, p_progress: p.progress, p_problems: p.problems, p_homework: p.homework
     });
-    localStorage.setItem(PASS_KEY, pass);
     closeSheet();
     toast("已保存 ✓");
     await loadData();
     render();
   } catch(e) {
-    if (e.message === "pass"){ localStorage.removeItem(PASS_KEY); toast("密码不对，再点一次保存重新输入"); }
-    else toast(e.message);
+    toast(e.message === "pass" ? "写入失败，请稍后再试" : e.message);
   }
 }
 
 async function saveStudent(p){
-  let pass = localStorage.getItem(PASS_KEY);
-  if (!pass){ pass = await askPass(); if (!pass) return; }
   try {
     await rpc("save_student", {
-      p_pass: pass, p_id: p.id, p_name: p.name, p_gender: p.gender,
+      p_pass: TEACHER_PASS, p_id: p.id, p_name: p.name, p_gender: p.gender,
       p_age: p.age, p_piece: p.piece, p_note: p.note, p_status: "在读"
     });
-    localStorage.setItem(PASS_KEY, pass);
     closeSheet();
     toast("学员已添加 ✓");
     await loadData();
     render();
   } catch(e) {
-    if (e.message === "pass"){ localStorage.removeItem(PASS_KEY); toast("密码不对，再点一次保存重新输入"); }
-    else toast(e.message);
+    toast(e.message === "pass" ? "写入失败，请稍后再试" : e.message);
   }
 }
 
