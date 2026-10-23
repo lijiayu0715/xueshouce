@@ -93,6 +93,12 @@ header.top .count{margin-top:8px;font-size:13px;opacity:.9}
 .logdel,.logedit{font-size:12px;color:#b0a395;cursor:pointer;padding:2px 4px;user-select:none}
 .logdel:active,.logedit:active{color:var(--zhu)}
 .delstudent{width:100%;background:none;border:1px solid #c0503f;color:#c0503f;border-radius:12px;padding:11px;font-size:14px;margin-top:16px;cursor:pointer}
+.log video{width:100%;border-radius:10px;margin-top:10px;background:#000;max-height:340px;display:block}
+.upvideo{font-size:12px;color:var(--blue);cursor:pointer;padding:2px 4px;user-select:none}
+.upvideo:active{color:var(--zhu)}
+.tcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.tcard .tdate{font-size:13px;color:var(--ink-soft);margin-bottom:8px}
+.tcard video{width:100%;border-radius:10px;background:#000;max-height:340px;display:block}
 
 .empty{text-align:center;color:var(--ink-soft);padding:40px 0;font-size:14px}
 footer{text-align:center;font-size:12px;color:#a89a8c;padding:20px 16px 30px}
@@ -191,7 +197,7 @@ function toast(msg){
 /* ============ 数据加载 ============ */
 async function loadData(){
   try {
-    const r = await fetch(SUPABASE_URL + "/rest/v1/students?select=id,name,gender,age,piece,note,parent,status,logs(id,date,type,content,progress,problems,homework)", {
+    const r = await fetch(SUPABASE_URL + "/rest/v1/students?select=id,name,gender,age,piece,note,parent,status,logs(id,date,type,content,progress,problems,homework,video)", {
       headers: { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY }
     });
     if (!r.ok) throw new Error("http " + r.status);
@@ -291,7 +297,7 @@ function logHTML(l){
       '<span class="head-right">' +
         '<span class="badge ' + esc(l.type) + '">' + esc(l.type) + '</span>' +
         (state.mode === "cloud"
-          ? '<span class="logedit" data-id="' + l.id + '">✏️ 编辑</span><span class="logdel" data-id="' + l.id + '">🗑 删除</span>'
+          ? '<span class="upvideo" data-id="' + l.id + '">⬆️ ' + (l.video ? '换视频' : '传视频') + '</span><span class="logedit" data-id="' + l.id + '">✏️ 编辑</span><span class="logdel" data-id="' + l.id + '">🗑 删除</span>'
           : '') +
       '</span>' +
     '</div>' +
@@ -299,6 +305,7 @@ function logHTML(l){
     (l.progress ? '<div class="item"><span class="ic prog">✅</span><span class="txt">' + esc(l.progress) + '</span></div>' : '') +
     (l.problems ? '<div class="item"><span class="ic prob">⚠️</span><span class="txt">' + esc(l.problems) + '</span></div>' : '') +
     (l.homework ? '<div class="item"><span class="ic home">✏️</span><span class="txt">' + esc(l.homework) + '</span></div>' : '') +
+    (l.video ? '<video controls preload="metadata" src="' + esc(l.video) + '"></video>' : '') +
   '</div>';
 }
 
@@ -308,6 +315,7 @@ function renderDetail(id){
   const fields = [
     ["性别", s.gender], ["年龄", s.age], ["家长沟通", s.parent]
   ].filter(function(f){ return f[1]; });
+  const vlogs = (s.logs || []).filter(function(x){ return x.video; }).slice().reverse();
   app.innerHTML =
     '<header class="top">' +
       '<div class="school">恒 韵 国 乐</div>' +
@@ -336,6 +344,9 @@ function renderDetail(id){
       (s.logs && s.logs.length
         ? s.logs.slice().reverse().map(logHTML).join("")
         : '<div class="empty">还没有记录，点右下角「＋ 记录」添加第一条吧</div>') +
+      (vlogs.length ? '<div class="section-title">🎬 视频时间线</div>' + vlogs.map(function(x){
+        return '<div class="tcard"><div class="tdate">' + esc(x.date) + ' · ' + esc(x.type) + '</div><video controls preload="metadata" src="' + esc(x.video) + '"></video></div>';
+      }).join("") : '') +
       (state.mode === "cloud" ? '<button class="delstudent" id="delStudent">删除该学员（连同全部记录）</button>' : '') +
     '</div>' +
     '<footer>仅供教学使用 · 请勿外传</footer>';
@@ -353,6 +364,16 @@ function renderDetail(id){
       const lid = Number(el.dataset.id);
       const log = (s.logs || []).find(function(x){ return x.id === lid; });
       if (log) openLogForm(log);
+    };
+  });
+  document.querySelectorAll(".upvideo").forEach(function(el){
+    el.onclick = function(e){
+      e.stopPropagation();
+      const fi = document.createElement("input");
+      fi.type = "file";
+      fi.accept = "video/*";
+      fi.onchange = function(){ const f = fi.files[0]; if (f) uploadVideo(el.dataset.id, f); };
+      fi.click();
     };
   });
   const ds = document.getElementById("delStudent");
@@ -452,6 +473,36 @@ async function saveStudent(p){
   } catch(e) {
     toast(e.message === "pass" ? "写入失败，请稍后再试" : e.message);
   }
+}
+
+/* ============ 视频 ============ */
+async function rpcText(name, body){
+  const r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+    method: "POST",
+    headers: { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error("rpc fail");
+  const t = await r.text();
+  return t.replace(/^"|"$/g, "");
+}
+
+function uploadVideo(lid, file){
+  toast("视频上传中，请稍候…");
+  const ext = (file.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
+  const fname = "v" + Date.now() + "." + ext;
+  rpcText("get_put_url", { p_file_name: fname }).then(function(url){
+    return fetch(url, { method: "PUT", body: file, headers: { "Content-Type": file.type || "video/mp4" } })
+      .then(function(r){ if (!r.ok) throw new Error("up fail"); return url.split("?")[0]; });
+  }).then(function(pub){
+    return rpc("set_video", { p_pass: TEACHER_PASS, p_id: Number(lid), p_url: pub });
+  }).then(async function(){
+    toast("视频已上传 ✓");
+    await loadData();
+    render();
+  }).catch(function(){
+    toast("上传失败，请检查网络后重试");
+  });
 }
 
 /* ============ 删除 ============ */
