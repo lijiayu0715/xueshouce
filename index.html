@@ -89,6 +89,10 @@ header.top .count{margin-top:8px;font-size:13px;opacity:.9}
 .log .ic.prog{color:var(--green)}
 .log .ic.prob{color:var(--amber)}
 .log .ic.home{color:var(--blue)}
+.head-right{display:flex;align-items:center;gap:10px}
+.logdel{font-size:12px;color:#b0a395;cursor:pointer;padding:2px 4px;user-select:none}
+.logdel:active{color:var(--zhu)}
+.delstudent{width:100%;background:none;border:1px solid #c0503f;color:#c0503f;border-radius:12px;padding:11px;font-size:14px;margin-top:16px;cursor:pointer}
 
 .empty{text-align:center;color:var(--ink-soft);padding:40px 0;font-size:14px}
 footer{text-align:center;font-size:12px;color:#a89a8c;padding:20px 16px 30px}
@@ -284,7 +288,10 @@ function logHTML(l){
   return '<div class="log">' +
     '<div class="head">' +
       '<span class="date">' + esc(l.date) + '</span>' +
-      '<span class="badge ' + esc(l.type) + '">' + esc(l.type) + '</span>' +
+      '<span class="head-right">' +
+        '<span class="badge ' + esc(l.type) + '">' + esc(l.type) + '</span>' +
+        (state.mode === "cloud" ? '<span class="logdel" data-id="' + l.id + '">🗑 删除</span>' : '') +
+      '</span>' +
     '</div>' +
     '<div class="item"><span class="ic">📖</span><span class="txt">' + esc(l.content) + '</span></div>' +
     (l.progress ? '<div class="item"><span class="ic prog">✅</span><span class="txt">' + esc(l.progress) + '</span></div>' : '') +
@@ -327,9 +334,22 @@ function renderDetail(id){
       (s.logs && s.logs.length
         ? s.logs.slice().reverse().map(logHTML).join("")
         : '<div class="empty">还没有记录，点右下角「＋ 记录」添加第一条吧</div>') +
+      (state.mode === "cloud" ? '<button class="delstudent" id="delStudent">删除该学员（连同全部记录）</button>' : '') +
     '</div>' +
     '<footer>仅供教学使用 · 请勿外传</footer>';
   document.getElementById("back").onclick = function(){ state.view = "list"; render(); };
+  document.querySelectorAll(".logdel").forEach(function(el){
+    el.onclick = function(e){
+      e.stopPropagation();
+      if (!confirm("确定删除这条记录吗？")) return;
+      deleteLog(el.dataset.id);
+    };
+  });
+  const ds = document.getElementById("delStudent");
+  if (ds) ds.onclick = function(){
+    if (!confirm("确定删除「" + s.name + "」吗？ta 的所有记录也会一起删除！")) return;
+    deleteStudent(s.id);
+  };
 }
 
 function render(){
@@ -406,6 +426,30 @@ async function saveStudent(p){
     render();
   } catch(e) {
     toast(e.message === "pass" ? "写入失败，请稍后再试" : e.message);
+  }
+}
+
+/* ============ 删除 ============ */
+async function deleteLog(lid){
+  try {
+    await rpc("delete_log", { p_pass: TEACHER_PASS, p_id: Number(lid) });
+    toast("已删除 ✓");
+    await loadData();
+    render();
+  } catch(e) {
+    toast(e.message === "pass" ? "删除失败，请稍后再试" : e.message);
+  }
+}
+
+async function deleteStudent(sid){
+  try {
+    await rpc("delete_student", { p_pass: TEACHER_PASS, p_id: sid });
+    toast("学员已删除 ✓");
+    state.view = "list";
+    await loadData();
+    render();
+  } catch(e) {
+    toast(e.message === "pass" ? "删除失败，请稍后再试" : e.message);
   }
 }
 
