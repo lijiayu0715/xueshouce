@@ -206,11 +206,24 @@ function daysAgo(ds){
   if (diff <= 7) return diff + "天前";
   return ds.slice(5).replace("-", ".");
 }
-function toast(msg){
+function toast(msg, sticky){
   toastEl.textContent = msg;
   toastEl.classList.add("on");
   clearTimeout(toast._t);
-  toast._t = setTimeout(function(){ toastEl.classList.remove("on"); }, 2200);
+  toast._sticky = !!sticky;
+  if (!sticky) toast._t = setTimeout(function(){ toastEl.classList.remove("on"); }, 2200);
+}
+function toastHide(){
+  clearTimeout(toast._t);
+  toast._sticky = false;
+  toastEl.classList.remove("on");
+}
+function fetchTimeout(url, opts, ms){
+  const ctl = new AbortController();
+  const t = setTimeout(function(){ ctl.abort(); }, ms);
+  opts = opts || {};
+  opts.signal = ctl.signal;
+  return fetch(url, opts).finally(function(){ clearTimeout(t); });
 }
 
 /* ============ 数据加载 ============ */
@@ -441,11 +454,11 @@ function askPass(){
 async function rpc(name, body){
   let r;
   try {
-    r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+    r = await fetchTimeout(SUPABASE_URL + "/rest/v1/rpc/" + name, {
       method: "POST",
       headers: { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
       body: JSON.stringify(body)
-    });
+    }, 20000);
   } catch(e) {
     throw new Error("网络连接失败，请检查网络后重试");
   }
@@ -514,11 +527,11 @@ async function saveStudent(p){
 async function rpcText(name, body){
   let r;
   try {
-    r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+    r = await fetchTimeout(SUPABASE_URL + "/rest/v1/rpc/" + name, {
       method: "POST",
       headers: { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
       body: JSON.stringify(body)
-    });
+    }, 20000);
   } catch(e) {
     throw new Error("网络连接失败，请检查网络后重试");
   }
@@ -528,40 +541,56 @@ async function rpcText(name, body){
 }
 
 async function uploadVideo(lid, file){
-  toast("视频上传中，请稍候…");
   const ext = (file.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
   const fname = "v" + Date.now() + "." + ext;
+  let url;
   try {
-    let url;
-    try {
-      url = await rpcText("get_put_url", { p_file_name: fname });
-    } catch(e){
-      toast("第1步失败：连不上云端，请换网络或稍后再试");
-      return;
-    }
-    let r;
-    try {
-      r = await fetch(url, { method: "PUT", body: file, headers: { "Content-Type": file.type || "video/mp4" } });
-    } catch(e){
-      toast("第2步失败：视频上传中断，请检查网络（建议用WiFi）");
-      return;
-    }
-    if (!r.ok){
-      toast("第2步失败：上传被拒（" + r.status + "），请重试");
-      return;
-    }
-    try {
-      await rpc("set_video", { p_pass: TEACHER_PASS, p_id: Number(lid), p_url: url.split("?")[0] });
-    } catch(e){
-      toast("第3步失败：视频已上传，但保存信息失败，请点「换视频」重传");
-      return;
-    }
-    toast("视频已上传 ✓");
-    await loadData();
-    render();
+    toast("正在获取上传通道…", true);
+    url = await rpcText("get_put_url", { p_file_name: fname });
   } catch(e){
-    toast("上传失败，请检查网络后重试");
+    toastHide();
+    toast("第1步失败：连不上云端，请换网络或稍后再试");
+    return;
   }
+  try {
+    await new Promise(function(resolve, reject){
+      toast("上传中 0%…", true);
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", url);
+      xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+      xhr.timeout = 600000;
+      xhr.upload.onprogress = function(e){
+        if (e.lengthComputable){
+          toast("上传中 " + Math.round(e.loaded / e.total * 100) + "%…", true);
+        }
+      };
+      xhr.onload = function(){
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error("http " + xhr.status));
+      };
+      xhr.onerror = function(){ reject(new Error("net")); };
+      xhr.ontimeout = function(){ reject(new Error("timeout")); };
+      xhr.send(file);
+    });
+  } catch(e){
+    toastHide();
+    if (e.message === "timeout") toast("第2步失败：上传超时，视频太大或网络太慢，建议连WiFi");
+    else if (e.message === "net") toast("第2步失败：视频上传中断，请检查网络（建议用WiFi）");
+    else toast("第2步失败：上传被拒，请重试");
+    return;
+  }
+  toast("上传完成，保存中…", true);
+  try {
+    await rpc("set_video", { p_pass: TEACHER_PASS, p_id: Number(lid), p_url: url.split("?")[0] });
+  } catch(e){
+    toastHide();
+    toast("第3步失败：视频已上传，但保存信息失败，请点「换视频」重传");
+    return;
+  }
+  toastHide();
+  toast("视频已上传 ✓");
+  await loadData();
+  render();
 }
 
 /* ============ 删除 ============ */
