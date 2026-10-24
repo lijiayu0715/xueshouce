@@ -210,9 +210,11 @@ async function loadData(){
       state.mode = "cloud";
       return;
     }
-  } catch(e) { /* 云端不可用,走本地备份 */ }
-  state.students = JSON.parse(JSON.stringify(FALLBACK.students));
-  state.mode = "local";
+    if (state.mode !== "cloud") { state.students = JSON.parse(JSON.stringify(FALLBACK.students)); state.mode = "local"; }
+  } catch(e) {
+    // 网络失败: 若已有云端数据,保留不动(避免"保存后消失");首次加载才用本地兜底
+    if (state.mode !== "cloud") { state.students = JSON.parse(JSON.stringify(FALLBACK.students)); state.mode = "local"; }
+  }
 }
 
 function lastLog(s){ return s.logs && s.logs.length ? s.logs[s.logs.length - 1] : null; }
@@ -418,11 +420,16 @@ function askPass(){
 
 /* ============ 云端写入 ============ */
 async function rpc(name, body){
-  const r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
-    method: "POST",
-    headers: { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
+  let r;
+  try {
+    r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+      method: "POST",
+      headers: { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+  } catch(e) {
+    throw new Error("网络连接失败，请检查网络后重试");
+  }
   if (!r.ok){
     const t = await r.text();
     if (t.indexOf("bad pass") !== -1) throw new Error("pass");
@@ -436,10 +443,12 @@ async function saveLog(p){
       p_pass: TEACHER_PASS, p_student_id: p.sid, p_date: p.date, p_type: p.type,
       p_content: p.content, p_progress: p.progress, p_problems: p.problems, p_homework: p.homework
     });
+    const stu = state.students.find(function(x){ return x.id === p.sid; });
+    if (stu) stu.logs = (stu.logs || []).concat([{ id: Date.now(), date: p.date, type: p.type, content: p.content, progress: p.progress, problems: p.problems, homework: p.homework }]);
     closeSheet();
     toast("已保存 ✓");
-    await loadData();
     render();
+    loadData().then(render).catch(function(){});
   } catch(e) {
     toast(e.message === "pass" ? "写入失败，请稍后再试" : e.message);
   }
@@ -451,10 +460,13 @@ async function saveLogEdit(lid, p){
       p_pass: TEACHER_PASS, p_id: Number(lid), p_date: p.date, p_type: p.type,
       p_content: p.content, p_progress: p.progress, p_problems: p.problems, p_homework: p.homework
     });
+    state.students.forEach(function(s){ s.logs = (s.logs || []).filter(function(x){ return String(x.id) !== String(lid); }); });
+    const tgt = state.students.find(function(x){ return x.id === p.sid; });
+    if (tgt) tgt.logs = (tgt.logs || []).concat([{ id: Number(lid), date: p.date, type: p.type, content: p.content, progress: p.progress, problems: p.problems, homework: p.homework }]);
     closeSheet();
     toast("已保存 ✓");
-    await loadData();
     render();
+    loadData().then(render).catch(function(){});
   } catch(e) {
     toast(e.message === "pass" ? "保存失败，请稍后再试" : e.message);
   }
@@ -466,10 +478,14 @@ async function saveStudent(p){
       p_pass: TEACHER_PASS, p_id: p.id, p_name: p.name, p_gender: p.gender,
       p_age: p.age, p_piece: p.piece, p_note: p.note, p_status: "在读"
     });
+    const idx = state.students.findIndex(function(x){ return x.id === p.id; });
+    const nu = { id: p.id, name: p.name, gender: p.gender, age: p.age, piece: p.piece, note: p.note, parent: "", status: "在读", logs: [] };
+    if (idx >= 0) { nu.logs = state.students[idx].logs; state.students[idx] = nu; }
+    else state.students.push(nu);
     closeSheet();
     toast("学员已添加 ✓");
-    await loadData();
     render();
+    loadData().then(render).catch(function(){});
   } catch(e) {
     toast(e.message === "pass" ? "写入失败，请稍后再试" : e.message);
   }
@@ -477,11 +493,16 @@ async function saveStudent(p){
 
 /* ============ 视频 ============ */
 async function rpcText(name, body){
-  const r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
-    method: "POST",
-    headers: { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
+  let r;
+  try {
+    r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+      method: "POST",
+      headers: { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+  } catch(e) {
+    throw new Error("网络连接失败，请检查网络后重试");
+  }
   if (!r.ok) throw new Error("rpc fail");
   const t = await r.text();
   return t.replace(/^"|"$/g, "");
@@ -509,9 +530,10 @@ function uploadVideo(lid, file){
 async function deleteLog(lid){
   try {
     await rpc("delete_log", { p_pass: TEACHER_PASS, p_id: Number(lid) });
+    state.students.forEach(function(s){ s.logs = (s.logs || []).filter(function(x){ return String(x.id) !== String(lid); }); });
     toast("已删除 ✓");
-    await loadData();
     render();
+    loadData().then(render).catch(function(){});
   } catch(e) {
     toast(e.message === "pass" ? "删除失败，请稍后再试" : e.message);
   }
@@ -520,10 +542,11 @@ async function deleteLog(lid){
 async function deleteStudent(sid){
   try {
     await rpc("delete_student", { p_pass: TEACHER_PASS, p_id: sid });
+    state.students = state.students.filter(function(x){ return x.id !== sid; });
     toast("学员已删除 ✓");
     state.view = "list";
-    await loadData();
     render();
+    loadData().then(render).catch(function(){});
   } catch(e) {
     toast(e.message === "pass" ? "删除失败，请稍后再试" : e.message);
   }
