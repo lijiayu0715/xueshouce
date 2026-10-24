@@ -225,6 +225,16 @@ function fetchTimeout(url, opts, ms){
   opts.signal = ctl.signal;
   return fetch(url, opts).finally(function(){ clearTimeout(t); });
 }
+function sleep(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+async function rpcTextRetry(name, body, times, onTry){
+  let lastErr;
+  for (let i = 0; i < times; i++){
+    if (onTry) onTry(i + 1, times);
+    try { return await rpcText(name, body); }
+    catch(e){ lastErr = e; await sleep(1500); }
+  }
+  throw lastErr;
+}
 
 /* ============ 数据加载 ============ */
 async function loadData(){
@@ -545,8 +555,9 @@ async function uploadVideo(lid, file){
   const fname = "v" + Date.now() + "." + ext;
   let url;
   try {
-    toast("正在获取上传通道…", true);
-    url = await rpcText("get_put_url", { p_file_name: fname });
+    url = await rpcTextRetry("get_put_url", { p_file_name: fname }, 3, function(i, n){
+      toast("正在连接云端…（第 " + i + "/" + n + " 次）", true);
+    });
   } catch(e){
     toastHide();
     toast("第1步失败：连不上云端，请换网络或稍后再试");
@@ -581,7 +592,15 @@ async function uploadVideo(lid, file){
   }
   toast("上传完成，保存中…", true);
   try {
-    await rpc("set_video", { p_pass: TEACHER_PASS, p_id: Number(lid), p_url: url.split("?")[0] });
+    let ok = false;
+    for (let i = 0; i < 3; i++){
+      try {
+        await rpc("set_video", { p_pass: TEACHER_PASS, p_id: Number(lid), p_url: url.split("?")[0] });
+        ok = true;
+        break;
+      } catch(e){ await sleep(1500); }
+    }
+    if (!ok) throw new Error("fail");
   } catch(e){
     toastHide();
     toast("第3步失败：视频已上传，但保存信息失败，请点「换视频」重传");
