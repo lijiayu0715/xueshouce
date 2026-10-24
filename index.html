@@ -96,6 +96,7 @@ header.top .count{margin-top:8px;font-size:13px;opacity:.9}
 .log video{width:100%;border-radius:10px;margin-top:10px;background:#000;max-height:340px;display:block}
 .upvideo{font-size:12px;color:var(--blue);cursor:pointer;padding:2px 4px;user-select:none}
 .upvideo:active{color:var(--zhu)}
+.airow{margin-bottom:12px}
 .tcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}
 .tcard .tdate{font-size:13px;color:var(--ink-soft);margin-bottom:8px}
 .tcard video{width:100%;border-radius:10px;background:#000;max-height:340px;display:block}
@@ -523,7 +524,7 @@ async function rpcText(name, body){
   }
   if (!r.ok) throw new Error("rpc fail");
   const t = await r.text();
-  return t.replace(/^"|"$/g, "");
+  return JSON.parse(t);
 }
 
 function uploadVideo(lid, file){
@@ -579,6 +580,13 @@ function openLogForm(existing){
   }).join("");
   openSheet(
     '<h3>' + (ex ? '✏️ 编辑记录' : '➕ 新增一条记录') + '</h3>' +
+    '<div class="airow">' +
+      '<button class="btn-big plain" id="aiToggle" style="margin-top:0">🧠 粘贴整段话自动填充</button>' +
+      '<div id="aiPanel" style="display:none">' +
+        '<div class="frow" style="margin-top:12px"><textarea id="ai_text" style="min-height:88px" placeholder="把整段话粘贴到这里，例如：&#10;彦彤今天练点奏耐力，能坚持3分钟了，重心还是容易往反方向倒，回家继续巩固摇指"></textarea></div>' +
+        '<button class="btn-big" id="aiGo">✨ 自动填充</button>' +
+      '</div>' +
+    '</div>' +
     '<div class="frow"><label>学员</label><select id="f_sid">' + opts + '</select></div>' +
     '<div class="frow"><label>日期</label><input id="f_date" type="date" value="' + (ex ? ex.date : todayStr()) + '"></div>' +
     '<div class="frow"><label>课型</label><div class="tchips" id="f_type">' +
@@ -596,6 +604,34 @@ function openLogForm(existing){
       document.getElementById("f_type").querySelectorAll(".tchip").forEach(function(x){ x.classList.toggle("on", x === c); });
     };
   });
+  document.getElementById("aiToggle").onclick = function(){
+    const p = document.getElementById("aiPanel");
+    p.style.display = p.style.display === "none" ? "block" : "none";
+  };
+  document.getElementById("aiGo").onclick = function(){
+    const txt = document.getElementById("ai_text").value.trim();
+    if (!txt){ toast("先粘贴一段话"); return; }
+    toast("AI 解析中，稍等几秒…");
+    const roster = state.students.map(function(s){ return s.name; }).join("、");
+    rpcText("ai_parse", { p_pass: TEACHER_PASS, p_text: "学员名单：" + roster + "\n\n老师原话：" + txt }).then(function(resp){
+      let d;
+      try { d = JSON.parse(resp); } catch(e){ d = null; }
+      if (!d || d.error){ toast(d && d.error ? d.error : "AI 解析失败，请重试"); return; }
+      if (d.name){
+        const hit = state.students.find(function(s){ return s.name === d.name || (d.name && s.name.indexOf(d.name) !== -1); });
+        if (hit) document.getElementById("f_sid").value = hit.id;
+      }
+      if (d.type && ["陪练","正课","回访"].indexOf(d.type) !== -1){
+        type = d.type;
+        document.getElementById("f_type").querySelectorAll(".tchip").forEach(function(x){ x.classList.toggle("on", x.dataset.t === d.type); });
+      }
+      if (d.content) document.getElementById("f_content").value = d.content;
+      if (d.progress) document.getElementById("f_progress").value = d.progress;
+      if (d.problems) document.getElementById("f_problems").value = d.problems;
+      if (d.homework) document.getElementById("f_homework").value = d.homework;
+      toast("已自动填充，检查一下再点保存 ✓");
+    }).catch(function(){ toast("AI 解析失败，请检查网络后重试"); });
+  };
   document.getElementById("f_save").onclick = function(){
     const content = document.getElementById("f_content").value.trim();
     if (!content){ toast("「教了什么」至少写一句"); return; }
