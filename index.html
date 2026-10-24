@@ -527,22 +527,41 @@ async function rpcText(name, body){
   return JSON.parse(t);
 }
 
-function uploadVideo(lid, file){
+async function uploadVideo(lid, file){
   toast("视频上传中，请稍候…");
   const ext = (file.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
   const fname = "v" + Date.now() + "." + ext;
-  rpcText("get_put_url", { p_file_name: fname }).then(function(url){
-    return fetch(url, { method: "PUT", body: file, headers: { "Content-Type": file.type || "video/mp4" } })
-      .then(function(r){ if (!r.ok) throw new Error("up fail"); return url.split("?")[0]; });
-  }).then(function(pub){
-    return rpc("set_video", { p_pass: TEACHER_PASS, p_id: Number(lid), p_url: pub });
-  }).then(async function(){
+  try {
+    let url;
+    try {
+      url = await rpcText("get_put_url", { p_file_name: fname });
+    } catch(e){
+      toast("第1步失败：连不上云端，请换网络或稍后再试");
+      return;
+    }
+    let r;
+    try {
+      r = await fetch(url, { method: "PUT", body: file, headers: { "Content-Type": file.type || "video/mp4" } });
+    } catch(e){
+      toast("第2步失败：视频上传中断，请检查网络（建议用WiFi）");
+      return;
+    }
+    if (!r.ok){
+      toast("第2步失败：上传被拒（" + r.status + "），请重试");
+      return;
+    }
+    try {
+      await rpc("set_video", { p_pass: TEACHER_PASS, p_id: Number(lid), p_url: url.split("?")[0] });
+    } catch(e){
+      toast("第3步失败：视频已上传，但保存信息失败，请点「换视频」重传");
+      return;
+    }
     toast("视频已上传 ✓");
     await loadData();
     render();
-  }).catch(function(){
+  } catch(e){
     toast("上传失败，请检查网络后重试");
-  });
+  }
 }
 
 /* ============ 删除 ============ */
