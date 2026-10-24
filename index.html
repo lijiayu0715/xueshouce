@@ -97,6 +97,10 @@ header.top .count{margin-top:8px;font-size:13px;opacity:.9}
 .upvideo{font-size:12px;color:var(--blue);cursor:pointer;padding:2px 4px;user-select:none}
 .upvideo:active{color:var(--zhu)}
 .airow{margin-bottom:12px}
+.vwrap{margin-top:10px}
+.vrow{display:flex;gap:14px;margin-top:6px;font-size:13px}
+.vdown{color:var(--blue);text-decoration:none}
+.vdel{color:#b0a395;cursor:pointer;user-select:none}
 .tcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}
 .tcard .tdate{font-size:13px;color:var(--ink-soft);margin-bottom:8px}
 .tcard video{width:100%;border-radius:10px;background:#000;max-height:340px;display:block}
@@ -239,7 +243,7 @@ async function rpcTextRetry(name, body, times, onTry){
 /* ============ 数据加载 ============ */
 async function loadData(){
   try {
-    const r = await fetch(SUPABASE_URL + "/rest/v1/students?select=id,name,gender,age,piece,note,parent,status,logs(id,date,type,content,progress,problems,homework,video)", {
+    const r = await fetch(SUPABASE_URL + "/rest/v1/students?select=id,name,gender,age,piece,note,parent,status,logs(id,date,type,content,progress,problems,homework,video,videos(id,url))", {
       headers: { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY }
     });
     if (!r.ok) throw new Error("http " + r.status);
@@ -334,6 +338,18 @@ function renderList(){
 }
 
 /* ============ 详情 ============ */
+function videoBlockHTML(logId, vlist){
+  return (vlist || []).map(function(v){
+    return '<div class="vwrap">' +
+      '<video controls preload="metadata" src="' + esc(v.url) + '"></video>' +
+      '<div class="vrow">' +
+        '<a class="vdown" href="' + esc(v.url) + '" target="_blank" rel="noopener">⬇️ 下载保存</a>' +
+        (state.mode === "cloud" ? '<span class="vdel" data-id="' + v.id + '">🗑 删除视频</span>' : '') +
+      '</div>' +
+    '</div>';
+  }).join("");
+}
+
 function logHTML(l){
   return '<div class="log">' +
     '<div class="head">' +
@@ -349,7 +365,7 @@ function logHTML(l){
     (l.progress ? '<div class="item"><span class="ic prog">✅</span><span class="txt">' + esc(l.progress) + '</span></div>' : '') +
     (l.problems ? '<div class="item"><span class="ic prob">⚠️</span><span class="txt">' + esc(l.problems) + '</span></div>' : '') +
     (l.homework ? '<div class="item"><span class="ic home">✏️</span><span class="txt">' + esc(l.homework) + '</span></div>' : '') +
-    (l.video ? '<video controls preload="metadata" src="' + esc(l.video) + '"></video>' : '') +
+    videoBlockHTML(l.id, l.videos) +
   '</div>';
 }
 
@@ -359,7 +375,13 @@ function renderDetail(id){
   const fields = [
     ["性别", s.gender], ["年龄", s.age], ["家长沟通", s.parent]
   ].filter(function(f){ return f[1]; });
-  const vlogs = (s.logs || []).filter(function(x){ return x.video; }).slice().reverse();
+  const vlogs = [];
+  (s.logs || []).forEach(function(x){
+    (x.videos || []).forEach(function(v){
+      vlogs.push({ date: x.date, type: x.type, url: v.url, id: v.id });
+    });
+  });
+  vlogs.reverse();
   app.innerHTML =
     '<header class="top">' +
       '<div class="school">恒 韵 国 乐</div>' +
@@ -389,7 +411,7 @@ function renderDetail(id){
         ? s.logs.slice().reverse().map(logHTML).join("")
         : '<div class="empty">还没有记录，点右下角「＋ 记录」添加第一条吧</div>') +
       (vlogs.length ? '<div class="section-title">🎬 视频时间线</div>' + vlogs.map(function(x){
-        return '<div class="tcard"><div class="tdate">' + esc(x.date) + ' · ' + esc(x.type) + '</div><video controls preload="metadata" src="' + esc(x.video) + '"></video></div>';
+        return '<div class="tcard"><div class="tdate">' + esc(x.date) + ' · ' + esc(x.type) + '</div><video controls preload="metadata" src="' + esc(x.url) + '"></video><div class="vrow"><a class="vdown" href="' + esc(x.url) + '" target="_blank" rel="noopener">⬇️ 下载保存</a></div></div>';
       }).join("") : '') +
       (state.mode === "cloud" ? '<button class="delstudent" id="delStudent">删除该学员（连同全部记录）</button>' : '') +
     '</div>' +
@@ -408,6 +430,13 @@ function renderDetail(id){
       const lid = Number(el.dataset.id);
       const log = (s.logs || []).find(function(x){ return x.id === lid; });
       if (log) openLogForm(log);
+    };
+  });
+  document.querySelectorAll(".vdel").forEach(function(el){
+    el.onclick = function(e){
+      e.stopPropagation();
+      if (!confirm("确定删除这个视频吗？（云端文件也会一起删除）")) return;
+      deleteVideo(el.dataset.id);
     };
   });
   document.querySelectorAll(".upvideo").forEach(function(el){
@@ -613,7 +642,7 @@ async function uploadVideo(lid, file){
     let ok = false;
     for (let i = 0; i < 3; i++){
       try {
-        await rpc("set_video", { p_pass: TEACHER_PASS, p_id: Number(lid), p_url: url.split("?")[0] });
+        await rpc("add_video", { p_pass: TEACHER_PASS, p_log_id: Number(lid), p_url: url.split("?")[0] });
         ok = true;
         break;
       } catch(e){ await sleep(1500); }
@@ -633,6 +662,17 @@ async function uploadVideo(lid, file){
 }
 
 /* ============ 删除 ============ */
+async function deleteVideo(vid){
+  try {
+    await rpc("delete_video", { p_pass: TEACHER_PASS, p_id: Number(vid) });
+    toast("视频已删除 ✓");
+    render();
+    loadData().then(render).catch(function(){});
+  } catch(e) {
+    toast(e.message === "pass" ? "删除失败，请稍后再试" : e.message);
+  }
+}
+
 async function deleteLog(lid){
   try {
     await rpc("delete_log", { p_pass: TEACHER_PASS, p_id: Number(lid) });
