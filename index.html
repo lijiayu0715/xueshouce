@@ -550,9 +550,37 @@ async function rpcText(name, body){
   return JSON.parse(t);
 }
 
+function putOnce(url, file, attempt){
+  return new Promise(function(resolve, reject){
+    toast("上传中 0%…" + (attempt > 1 ? "（自动重传）" : ""), true);
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+    xhr.timeout = 900000;
+    xhr.upload.onprogress = function(e){
+      if (e.lengthComputable){
+        toast("上传中 " + Math.round(e.loaded / e.total * 100) + "%…" + (attempt > 1 ? "（自动重传）" : ""), true);
+      }
+    };
+    xhr.onload = function(){
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error("http " + xhr.status));
+    };
+    xhr.onerror = function(){ reject(new Error("net")); };
+    xhr.ontimeout = function(){ reject(new Error("timeout")); };
+    xhr.send(file);
+  });
+}
+
 async function uploadVideo(lid, file){
   const ext = (file.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
   const fname = "v" + Date.now() + "." + ext;
+  // 上传期间保持屏幕常亮，防止锁屏中断
+  let wake = null;
+  try {
+    if (navigator.wakeLock && navigator.wakeLock.request) wake = await navigator.wakeLock.request("screen");
+  } catch(e){}
+  const releaseWake = function(){ if (wake){ try { wake.release(); } catch(e){} } };
   let url;
   try {
     url = await rpcTextRetry("get_put_url", { p_file_name: fname }, 3, function(i, n){
@@ -560,33 +588,23 @@ async function uploadVideo(lid, file){
     });
   } catch(e){
     toastHide();
+    releaseWake();
     toast("第1步失败：连不上云端，请换网络或稍后再试");
     return;
   }
-  try {
-    await new Promise(function(resolve, reject){
-      toast("上传中 0%…", true);
-      const xhr = new XMLHttpRequest();
-      xhr.open("PUT", url);
-      xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
-      xhr.timeout = 600000;
-      xhr.upload.onprogress = function(e){
-        if (e.lengthComputable){
-          toast("上传中 " + Math.round(e.loaded / e.total * 100) + "%…", true);
-        }
-      };
-      xhr.onload = function(){
-        if (xhr.status >= 200 && xhr.status < 300) resolve();
-        else reject(new Error("http " + xhr.status));
-      };
-      xhr.onerror = function(){ reject(new Error("net")); };
-      xhr.ontimeout = function(){ reject(new Error("timeout")); };
-      xhr.send(file);
-    });
-  } catch(e){
+  let upErr = null;
+  for (let attempt = 1; attempt <= 2; attempt++){
+    try {
+      await putOnce(url, file, attempt);
+      upErr = null;
+      break;
+    } catch(e){ upErr = e; }
+  }
+  if (upErr){
     toastHide();
-    if (e.message === "timeout") toast("第2步失败：上传超时，视频太大或网络太慢，建议连WiFi");
-    else if (e.message === "net") toast("第2步失败：视频上传中断，请检查网络（建议用WiFi）");
+    releaseWake();
+    if (upErr.message === "timeout") toast("第2步失败：上传超时，建议连WiFi或改用1080p拍摄");
+    else if (upErr.message === "net") toast("第2步失败：视频上传中断，请保持页面在前台再试，或连WiFi");
     else toast("第2步失败：上传被拒，请重试");
     return;
   }
@@ -603,10 +621,12 @@ async function uploadVideo(lid, file){
     if (!ok) throw new Error("fail");
   } catch(e){
     toastHide();
+    releaseWake();
     toast("第3步失败：视频已上传，但保存信息失败，请点「换视频」重传");
     return;
   }
   toastHide();
+  releaseWake();
   toast("视频已上传 ✓");
   await loadData();
   render();
