@@ -151,44 +151,53 @@ const TEACHER_PASS = "7715"; // 她决定不需要密码锁，直接内置自动
 
 /* ============ 本地备份数据（云端连不上时兜底，只读） ============ */
 const FALLBACK = { students: [
-  { id:"langlang", name:"朗朗", gender:"男", age:"约11岁", piece:"井冈山", note:"善良、聪明、有点小内敛", parent:"", status:"在读", logs:[
-    { id:1, date:"2026-10-17", type:"正课", content:"① 右手快板：16分音符连贯、提速、掌根关节、背谱\n② 第一乐句双手配合：左手突节奏、右手稳旋律\n③ 右手主旋律连弹5次", progress:"主旋律体态到位、空间拉长", problems:"左手：手腕被挤压→律动不起来\n右手：静态不够、无名指放得不够→衔接处提速困难", homework:"左手：手腕后端支撑、移动靠小臂\n右手：单练无名指衔接" }
-  ]},
-  { id:"zhitong", name:"芷彤", gender:"女", age:"约5岁", piece:"战台风", note:"很聪明、比较腼腆", parent:"", status:"在读", logs:[
-    { id:2, date:"2026-10-17", type:"正课", content:"① 第一段\n② 扫摇段落\n③ 扫摇连续3分钟不停（力量、耐力、连贯性）", progress:"节奏非常稳定；滑音会用脚支撑、会借力", problems:"手腕反应可更快", homework:"手腕：负重器练习\n扫摇：连续3分钟耐力训练" },
-    { id:3, date:"2026-10-18", type:"陪练", content:"战台风：点奏、刮奏陪练", progress:"点奏力度加强非常多；刮奏的力度和情感都在线", problems:"", homework:"" }
-  ]},
-  { id:"ziyu", name:"子渝", gender:"女", age:"约7岁", piece:"浏阳河", note:"非常机灵、有自己的想法、比较调皮——需要用方法hold住", parent:"", status:"在读", logs:[
-    { id:4, date:"2026-10-17", type:"正课", content:"① 快板第一句\n② 第一句右手连续弹奏10次（强化记忆）", progress:"", problems:"熟练度与速度需加强；远距离弹奏时，手臂要有提前往前送的意识", homework:"快板第一句：提速 + 远距离弹奏的手臂前送意识" },
-    { id:15, date:"2026-10-24", type:"陪练", content:"浏阳河右手单指训练：① 音色对比训练 ② 提速训练；在不同琴上感受音色变化与软硬程度；同一台琴不同弹奏位置的音色区别（今天练的时间不长，家长来得早提前接走了）", progress:"", problems:"", homework:"" }
-  ]},
-  { id:"yantong", name:"彦彤", gender:"女", age:"约6岁", piece:"战台风", note:"耐力很强、对自己要求很高；吸收能力很快、非常有胜负欲；引导得法时很听话", parent:"", status:"在读", logs:[
-    { id:5, date:"2026-10-17", type:"正课", content:"① 扫摇段落\n② 摇指独立训练", progress:"", problems:"摇指发力点和运动位置不对（初学不久，需巩固）：\n捏指：越靠近前端越好\n小臂：必须给足空间（小臂易掉）\n手型：三五指框架要打开（易紧张收拢），要有静态空间支撑", homework:"独立练习「劈」指，找摆动感与方向感" },
-    { id:6, date:"2026-10-18", type:"陪练", content:"点奏训练、摇指训练（暂以摇指代替扫摇）", progress:"点奏的速度和力度都起来了", problems:"扫摇暂时不能练：摇指刚改过来不到一周，要继续保持\n重心容易倒向反方向", homework:"摇指继续保持巩固；重心往身体这边多倒一点（需不断提醒）" },
-    { id:16, date:"2026-10-24", type:"正课", content:"① 点奏耐力训练\n② 双手抹指同时弹奏（练力度）\n③ 扫摇片段摇指耐力训练（坚持3分钟）", progress:"摇指耐力能坚持3分钟", problems:"", homework:"" }
-  ]},
-  { id:"liaoyuan", name:"廖榆安", gender:"女", age:"约7岁", piece:"浏阳河", note:"很安静、很听话的小女孩", parent:"", status:"在读", logs:[
-    { id:7, date:"2026-10-18", type:"陪练", content:"新学：快板第一句、慢板第一句", progress:"右手手指机能很好", problems:"左手中指、无名指还需加强训练", homework:"左手中指、无名指加强训练" }
-  ]},
-  { id:"xiaoxiao", name:"笑笑", gender:"女", age:"约7岁", piece:"战台风", note:"很文静", parent:"", status:"在读", logs:[
-    { id:8, date:"2026-10-18", type:"陪练", content:"点奏片段、扫摇训练", progress:"扫摇能起很快的速度", problems:"点奏：左手独立性不够→容易含糊到一起\n扫摇：速度快了容易乱", homework:"从摇指开始练起，打好基础再提速" }
+  { id:"yichun", name:"依淳", gender:"女", age:"约13岁", piece:"云裳诉", note:"《云裳诉》已学完，进入背谱阶段", parent:"", status:"在读", logs:[
+    { id:33, date:"2026-10-24", type:"陪练", content:"① 左右手四五点基本功训练\n② 无名指与中指「弹一贴一」训练\n③ 《云裳诉》慢版背谱", progress:"右手力度很好；左手独立性很好；单独练基本功时手指力度很好", problems:"弹一贴一容易来不及贴、变成全弹；按音音准易把握不好；加右手后影响左手颤音；弹奏时力度比单独练时欠缺", homework:"", video:"" },
   ]},
   { id:"s1792722788285", name:"团团", gender:"女", age:"约6岁", piece:"浏阳河", note:"", parent:"", status:"在读", logs:[
-    { id:17, date:"2026-10-23", type:"陪练", content:"《浏阳河》双手配合训练 前两小节\n《浏阳河》右手独立提速训练", progress:"", problems:"", homework:"" }
+    { id:28, date:"2026-10-23", type:"陪练", content:"《浏阳河》双手配合训练 前两小节\n《浏阳河》右手独立提速训练", progress:"手机机能和力度都很好", problems:"左右手配合总打架\n脖子太低了", homework:"弹左唱右\n双手同时演奏主旋律 增加配合能力", video:"https://hengyun-videos-1509324950.cos.ap-guangzhou.myqcloud.com/videos/v1792851180684.mov" },
+  ]},
+  { id:"ziyu", name:"子渝", gender:"女", age:"约7岁", piece:"浏阳河", note:"非常机灵、有自己的想法、比较调皮——需要用方法hold住", parent:"", status:"在读", logs:[
+    { id:3, date:"2026-10-17", type:"正课", content:"① 快板第一句\r\n② 第一句右手连续弹奏10次（强化记忆）", progress:"", problems:"熟练度与速度需加强；远距离弹奏时，手臂要有提前往前送的意识", homework:"快板第一句：提速 + 远距离弹奏的手臂前送意识", video:"" },
+    { id:26, date:"2026-10-22", type:"陪练", content:"1️⃣双手同时弹奏《浏阳河》\n2️⃣单手《浏阳河》提速\n3️⃣三级考级曲前两行", progress:"今天注意力很集中\n右手发力手型特别好\n可以持续提醒她的脖子", problems:"", homework:"备注 对待子渝需要方法\n比如这堂课中我采取了问答法 激励法 激将法（我不会 你会吗）鼓励 用节奏挑战来放松等等\n但是若何在后半段继续保持专注 这个是需要持续思考打磨的", video:"" },
+    { id:36, date:"2026-10-24", type:"陪练", content:"浏阳河右手单指训练：① 音色对比训练 ② 提速训练；在不同琴上感受音色变化与软硬程度；同一台琴不同弹奏位置的音色区别（今天练的时间不长，家长来得早提前接走了）", progress:"", problems:"", homework:"", video:"https://hengyun-videos-1509324950.cos.ap-guangzhou.myqcloud.com/videos/v1792850915981.mov" },
+  ]},
+  { id:"liaoyuan", name:"廖元曼", gender:"女", age:"约7岁", piece:"浏阳河", note:"别名：廖榆安；很安静、很听话的小女孩；对《浏阳河》流水片段有很大兴趣", parent:"", status:"在读", logs:[
+    { id:7, date:"2026-10-18", type:"陪练", content:"新学：快板第一句、慢板第一句", progress:"右手手指机能很好", problems:"左手中指、无名指还需加强训练", homework:"左手中指、无名指加强训练", video:"" },
+    { id:41, date:"2026-10-25", type:"正课", content:"① 琶音讲解（手型框架、弹奏方法、记谱方式）\n② 浏阳河第一句快板巩固\n③ 第二句新课（逆指指序：拇指弹完下行音阶托指用手臂去够）\n④ 流水片段复习巩固及新课", progress:"第一句背得熟、加速好、手型发力好；第二句逆指做得好；能边弹边背谱、记忆力很好", problems:"流水片段还不够熟练，需继续练习", homework:"流水片段继续练习", video:"" },
+  ]},
+  { id:"yantong", name:"彦彤", gender:"女", age:"约6岁", piece:"战台风", note:"耐力很强、对自己要求很高；吸收能力很快、非常有胜负欲；引导得法时很听话", parent:"", status:"在读", logs:[
+    { id:4, date:"2026-10-17", type:"正课", content:"① 扫摇段落\r\n② 摇指独立训练", progress:"", problems:"摇指发力点和运动位置不对（初学不久，需巩固）：\r\n捏指：越靠近前端越好\r\n小臂：必须给足空间（小臂易掉）\r\n手型：三五指框架要打开（易紧张收拢），要有静态空间支撑", homework:"独立练习「劈」指，找摆动感与方向感", video:"" },
+    { id:5, date:"2026-10-18", type:"陪练", content:"点奏训练、摇指训练（暂以摇指代替扫摇）", progress:"点奏的速度和力度都起来了", problems:"扫摇暂时不能练：摇指刚改过来不到一周，要继续保持\r\n重心容易倒向反方向", homework:"摇指继续保持巩固；重心往身体这边多倒一点（需不断提醒）", video:"" },
+    { id:34, date:"2026-10-24", type:"正课", content:"① 点奏耐力训练\n② 双手抹指同时弹奏（练力度）\n③ 扫摇片段摇指耐力训练（坚持3分钟）", progress:"摇指耐力能坚持3分钟", problems:"", homework:"", video:"" },
+    { id:40, date:"2026-10-25", type:"正课", content:"① 摇指练习（勾摇衔接：勾指弹完胳膊肘打开再摇指；讲解捏指位置和摇指重心）\n② 慢板前三行背谱（背了第一、二行）\n③ 快板练习\n④ 点奏练习", progress:"摇指巩固维稳、耐力好且在正确范围内；慢板摇指带入弹得好、左手琶音精准；快板双手配合好、左手小搓抓得精准；点奏前段力度速度起得不错", problems:"快板力度稍欠缺；点奏高音区衔接劳累、略不均匀", homework:"", video:"" },
+  ]},
+  { id:"langlang", name:"朗朗", gender:"男", age:"约11岁", piece:"井冈山", note:"善良、聪明、有点小内敛", parent:"", status:"在读", logs:[
+    { id:1, date:"2026-10-17", type:"正课", content:"① 右手快板：16分音符连贯、提速、掌根关节、背谱\r\n② 第一乐句双手配合：左手突节奏、右手稳旋律\r\n③ 右手主旋律连弹5次", progress:"主旋律体态到位、空间拉长", problems:"左手：手腕被挤压→律动不起来\r\n右手：静态不够、无名指放得不够→衔接处提速困难", homework:"左手：手腕后端支撑、移动靠小臂\r\n右手：单练无名指衔接", video:"" },
   ]},
   { id:"xinran", name:"欣然", gender:"女", age:"约13岁", piece:"战台风", note:"", parent:"", status:"在读", logs:[
-    { id:18, date:"2026-10-23", type:"正课", content:"战台风快板第一段；练习：① 双手交替弹奏（大指与食指之间的距离及力量）\n② 单独右手抹托训练（抹指与托指的同步准备）", progress:"", problems:"脖子总掉下来、重心不平衡，喜欢用脖子借力；音序容易搞错；左手力度不够", homework:"" }
+    { id:31, date:"2026-10-23", type:"正课", content:"战台风快板第一段；练习：① 双手交替弹奏（大指与食指之间的距离及力量）\n② 单独右手抹托训练（抹指与托指的同步准备）", progress:"", problems:"脖子总掉下来、重心不平衡，喜欢用脖子借力；音序容易搞错；左手力度不够", homework:"", video:"" },
+  ]},
+  { id:"xiaoyin", name:"潇尹", gender:"女", age:"约8岁", piece:"战台风", note:"上课专注、不扯东扯西；很开朗，讲好笑的事会逗得很开心", parent:"", status:"在读", logs:[
+    { id:38, date:"2026-10-25", type:"正课", content:"① 抹托交替训练（拇指弹完，托指要同时准备）\n② 点奏练习\n③ 快板提速训练（速度前后对比）", progress:"点奏的速度、力度和颗粒性好了很多", problems:"", homework:"", video:"" },
+  ]},
+  { id:"xizhao", name:"熙朝", gender:"男", age:"约10岁", piece:"将军令", note:"", parent:"", status:"在读", logs:[
+    { id:39, date:"2026-10-25", type:"陪练", content:"快板衔接段落背谱训练；快板第二段：抹托交替衔接勾指训练（勾指音距跨度大，托指结束勾指立马衔接）", progress:"三句都背下来了；快板第二段勾指衔接做得很不错", problems:"一句和二句衔接有断点；勾托勾托后摇指直接刮奏不够清晰；整曲几乎能完整背下，但多处卡顿、熟练度不够", homework:"", video:"" },
+  ]},
+  { id:"xiaoxiao", name:"笑笑", gender:"女", age:"约7岁", piece:"战台风", note:"很文静", parent:"", status:"在读", logs:[
+    { id:8, date:"2026-10-18", type:"陪练", content:"点奏片段、扫摇训练", progress:"扫摇能起很快的速度", problems:"点奏：左手独立性不够→容易含糊到一起\r\n扫摇：速度快了容易乱", homework:"从摇指开始练起，打好基础再提速", video:"" },
+  ]},
+  { id:"zhitong", name:"芷彤", gender:"女", age:"约5岁", piece:"战台风", note:"很聪明、比较腼腆", parent:"", status:"在读", logs:[
+    { id:2, date:"2026-10-17", type:"正课", content:"① 第一段\r\n② 扫摇段落\r\n③ 扫摇连续3分钟不停（力量、耐力、连贯性）", progress:"节奏非常稳定；滑音会用脚支撑、会借力", problems:"手腕反应可更快", homework:"手腕：负重器练习\r\n扫摇：连续3分钟耐力训练", video:"" },
+    { id:6, date:"2026-10-18", type:"陪练", content:"战台风：点奏、刮奏陪练", progress:"点奏力度加强非常多；刮奏的力度和情感都在线", problems:"", homework:"", video:"" },
   ]},
   { id:"zhimo", name:"袁芷默", gender:"女", age:"约8岁", piece:"浏阳河", note:"状态下滑时很抗拒练琴，上课需方法、以鼓励为主", parent:"", status:"在读", logs:[
-    { id:19, date:"2026-10-23", type:"陪练", content:"① 流水片段\n② 右手流水主旋律\n③ 带入主旋律重音弹奏流水段落", progress:"", problems:"状态下滑时极其抗拒练琴", homework:"" }
-  ]},
-  { id:"yichun", name:"依淳", gender:"女", age:"约13岁", piece:"云裳诉", note:"《云裳诉》已学完，进入背谱阶段", parent:"", status:"在读", logs:[
-    { id:20, date:"2026-10-24", type:"陪练", content:"① 左右手四五点基本功训练\n② 无名指与中指「弹一贴一」训练\n③ 《云裳诉》慢版背谱", progress:"右手力度很好；左手独立性很好；单独练基本功时手指力度很好", problems:"弹一贴一容易来不及贴、变成全弹；按音音准易把握不好；加右手后影响左手颤音；弹奏时力度比单独练时欠缺", homework:"" }
+    { id:32, date:"2026-10-23", type:"陪练", content:"① 流水片段\n② 右手流水主旋律\n③ 带入主旋律重音弹奏流水段落", progress:"", problems:"状态下滑时极其抗拒练琴", homework:"", video:"" },
   ]},
   { id:"yutong", name:"雨彤", gender:"女", age:"约8岁", piece:"旱天雷", note:"非常可爱机灵；会的很想练很享受，不熟练易畏难，需恰当方法引导", parent:"", status:"在读", logs:[
-    { id:21, date:"2026-10-21", type:"陪练", content:"挤牛奶背谱子", progress:"", problems:"", homework:"" },
-    { id:22, date:"2026-10-24", type:"正课", content:"旱天雷节奏与唱谱（刚过第一句）；《挤牛奶》考级视频已录完", progress:"", problems:"节奏把控稍薄弱；乐理知识掌握不够好；手指机能需提升", homework:"" }
-  ]}
+    { id:37, date:"2026-10-21", type:"陪练", content:"挤牛奶背谱子", progress:"", problems:"节奏有点瑕疵", homework:"可以多唱 以唱代弹", video:"" },
+    { id:35, date:"2026-10-24", type:"正课", content:"旱天雷节奏与唱谱（刚过第一句）；《挤牛奶》考级视频已录完", progress:"", problems:"节奏把控稍薄弱；乐理知识掌握不够好；手指机能需提升", homework:"", video:"" },
+  ]},
 ]};
 
 /* ============ 状态与工具 ============ */
@@ -291,7 +300,7 @@ function renderList(){
   const { q, status } = state;
   let list = state.students.filter(function(s){
     if (status !== "全部" && s.status !== status) return false;
-    if (q && s.name.indexOf(q) === -1) return false;
+    if (q && s.name.indexOf(q) === -1 && (s.note || "").indexOf(q) === -1) return false;
     return true;
   });
   list = list.slice().sort(function(a,b){
