@@ -362,7 +362,7 @@ function renderList(){
         ? list.map(cardHTML).join("")
         : '<div class="empty">' + (state.q ? '没有找到「' + esc(state.q) + '」的学员' : '没有符合筛选的学员') + '</div>') +
     '</div>' +
-    '<footer>仅供教学使用 · 请勿外传</footer>';
+    '<footer>仅供教学使用 · 请勿外传 · 版本 v2026.11.10</footer>';
 
   const inp = document.getElementById("q");
   inp.addEventListener("input", function(e){
@@ -458,7 +458,7 @@ function renderDetail(id){
       }).join("") : '') +
       (state.mode === "cloud" ? '<button class="delstudent" id="delStudent">删除该学员（连同全部记录）</button>' : '') +
     '</div>' +
-    '<footer>仅供教学使用 · 请勿外传</footer>';
+    '<footer>仅供教学使用 · 请勿外传 · 版本 v2026.11.10</footer>';
   document.getElementById("back").onclick = function(){ state.view = "list"; render(); };
   document.querySelectorAll(".logdel").forEach(function(el){
     el.onclick = function(e){
